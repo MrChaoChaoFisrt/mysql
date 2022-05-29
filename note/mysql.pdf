@@ -1,0 +1,3383 @@
+`mysql`数据库
+
+mycli的安装
+===
+
+```sql
+$ sudo apt-get update
+$ sudo apt-get install mycli
+```
+
+`mysql`数据的登录:
+
+```bash
+alias loginsql='mysql -ulc_konglc -h192.168.163.132 -plc_konglc'
+vim ~/.bashrc
+修改配置文件如下:
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+##############################
+alias loginsql='mysql -ulc_konglc -h192.168.163.132 -plc_konglc'
+source ~/.bashrc
+```
+
+```bash
+-- mysql配置文件
+/etc/mysql/mysql.conf.d/mysql.cnf
+[mysql]
+default-character-set=utf8
+
+```
+
+`mysql`配置文件
+
+```bash
+配置文件
+/etc/mysql/mysql.conf.d/mysqld.cnf 
+#
+# The MySQL database server configuration file.
+#
+# One can use all long options that the program supports.
+# Run program with --help to get a list of available options and with
+# --print-defaults to see which it would actually understand and use.
+#
+# For explanations see
+# http://dev.mysql.com/doc/mysql/en/server-system-variables.html
+
+# Here is entries for some specific programs
+# The following values assume you have at least 32M ram
+
+[mysqld]
+#
+# * Basic Settings
+#
+user            = mysql
+# pid-file      = /var/run/mysqld/mysqld.pid
+# socket        = /var/run/mysqld/mysqld.sock
+## 端口号
+port           = 3306
+character_set_server=utf8
+# datadir       = /var/lib/mysql
+
+
+# If MySQL is running as a replication slave, this should be
+# changed. Ref https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_tmpdir
+# tmpdir                = /tmp
+#
+# Instead of skip-networking the default is now to listen only on
+# localhost which is more compatible and is not less secure.
+bind-address            = 192.168.163.132
+mysqlx-bind-address     = 192.168.163.132
+#
+# * Fine Tuning
+#
+key_buffer_size         = 16M
+max_allowed_packet      = 64M
+# thread_stack          = 256K
+
+# thread_cache_size       = -1
+
+# This replaces the startup script and checks MyISAM tables if needed
+# the first time they are touched
+myisam-recover-options  = BACKUP
+
+## 表示允许同时访问 MySQL 服务器的最大连接数。其中一个连接是保留的，留给管理员专用的表示允	许同时访问 MySQL 服务器的最大连接数。其中一个连接是保留的，留给管理员专用的
+# max_connections        = 151
+
+# table_open_cache       = 4000
+
+#
+# * Logging and Replication
+#
+# Both location gets rotated by the cronjob.
+#
+# Log all queries
+# Be aware that this log type is a performance killer.
+# general_log_file        = /var/log/mysql/query.log
+# general_log             = 1
+#
+# Error log - should be very few entries.
+#
+log_error = /var/log/mysql/error.log
+#
+# Here you can see queries with especially long duration
+# slow_query_log                = 1
+# slow_query_log_file   = /var/log/mysql/mysql-slow.log
+# long_query_time = 2
+# log-queries-not-using-indexes
+#
+# The following can be used as easy to replay backup logs or for replication.
+# note: if you are setting up a replication slave, see README.Debian about
+#       other settings you may need to change.
+# server-id             = 1
+# log_bin                       = /var/log/mysql/mysql-bin.log
+# binlog_expire_logs_seconds    = 2592000
+max_binlog_size   = 100M
+#skip-grant-tables
+# binlog_do_db          = include_database_name
+# binlog_ignore_db      = include_database_name
+```
+
+**查看`mysql`版本**
+
+```bash
+mysql --version
+mysql  Ver 8.0.25-0ubuntu0.20.04.1 for Linux on x86_64 ((Ubuntu))
+```
+
+**`mysql`的基本命令:**
+
+```bash
+## 启动mysql服务
+service mysql start
+
+## 停止mysql服务
+service mysql stop
+
+##查看服务的状态
+systemctl  status mysql
+## 查看数据库
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| konglc_test        |
++--------------------+
+2 rows in set (0.00 sec)
+
+## 查看某个数据库下的表
+mysql> show tables from konglc_test;
++-----------------------+
+| Tables_in_konglc_test |
++-----------------------+
+| k_log                 |
+| logs                  |
+| tf_f_acct             |
+| tf_f_group            |
+| tf_f_user             |
++-----------------------+
+5 rows in set (0.01 sec)
+
+##  切换数据库
+mysql> use konglc_test;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+
+## 查看当前的mysql客户端进程
+netstat -anp|grep 3306
+tcp        0      0 192.168.163.132:47426   192.168.163.132:3306    ESTABLISHED 4072/mysql 
+
+
+## 查看当前数据库
+mysql> select database();
++-------------+
+| database()  |
++-------------+
+| konglc_test |
++-------------+
+
+## 查看表结构
+mysql> desc tf_f_user;
++----------+-------------+------+-----+---------+----------------+
+| Field    | Type        | Null | Key | Default | Extra          |
++----------+-------------+------+-----+---------+----------------+
+| id       | int         | NO   | PRI | NULL    | auto_increment |
+| username | varchar(20) | NO   | UNI | NULL    |                |
+| password | varchar(20) | NO   |     | NULL    |                |
+| age      | int         | YES  |     | NULL    |                |
+| phone    | varchar(20) | YES  |     | NULL    |                |
+| email    | varchar(30) | YES  |     | NULL    |                |
+| group_id | int         | YES  | MUL | NULL    |                |
++----------+-------------+------+-----+---------+----------------+
+## 查看数据的创建信息
+mysql> show create database konglc_test;
+
+## 查看字符集
+mysql> show variables like 'CHARACTER%';
++--------------------------+----------------------------+
+| Variable_name            | Value                      |
++--------------------------+----------------------------+
+| character_set_client     | utf8mb3                    |
+| character_set_connection | utf8mb3                    |
+| character_set_database   | utf8mb3                    |
+| character_set_filesystem | binary                     |
+| character_set_results    | utf8mb3                    |
+| character_set_server     | utf8mb3                    |
+| character_set_system     | utf8mb3                    |
+| character_sets_dir       | /usr/share/mysql/charsets/ |
++--------------------------+----------------------------+
+
+## 创建数据库
+creat database choose
+
+## 查看表的创建信息
+mysql> show create table tf_f_acct;
++-----------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Table     | Create Table                                                                                                                                                                     |
++-----------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| tf_f_acct | CREATE TABLE `tf_f_acct` (
+  `id` int NOT NULL,
+  `user_name` varchar(20) DEFAULT NULL,
+  `money` int DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 |
++-----------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (0.00 sec)
+
+
+### 查看
+mysql lc_konglc@192.168.10.132:konglc_base> show status like 'Threads%';                       
+
+Threads_cached  : 
+Threads_running : 激活的连接数
+Threads_connected : 打开的连接数
++-------------------+-------+
+| Variable_name     | Value |
++-------------------+-------+
+| Threads_cached    | 1     |
+| Threads_connected | 4     |
+| Threads_created   | 5     |
+| Threads_running   | 2     |
++-------------------+-------+
+```
+
+`mysql`常见的函数
+
+```mysql
+-- 返回子串第一次出现的索引,如果找不到则返回0
+select instr('konglingchao','chao') as result;--9
+select instr('konglingchao','lubo') as result;--0
+-- 取出字符串两边的空格
+select trim('     konglingchao     ') as result;
+
+-- 日期相关的函数
+select now() as current_datetime;
+select curdate() ;
+
+select curtime();
+select year(now()) as yy;
+
+select month(now()) as mm;
+select day(now()) as dd;
+
+select year('1996-08-16');
+select month('1996-08-16');
+
+select hour(now());
+select minute(now());
+
+select second(now());
+
+-- 当前时间戳
+select current_timestamp();
+select date_format(current_timestamp(),'%Y%m%d%H%i%s');
+-- 当前时间
+select current_time();
+
+linux命令:
+konglc@konglc-virtual-machine:~$ date +%Y-%m-%d
+2021-06-29
+konglc@konglc-virtual-machine:~$ date +%F
+2021-06-29
+str_to_date函数
+格式说明:
+%Y 4位的年份
+%y 2位的年份  
+%m (01 02 03)
+%c (1 2 3 4)
+%d (01 02 )
+%H (24小时制)
+%h (12小时制)
+%i (分钟)
+%s (秒)
+--将字符串转换成日期
+select str_to_date('2021-03-15 23:59:59' ,'%Y-%m-%d  %H:%i:%s');
+select now();
+--将日期转换成字符串
+select date_format(now(),'%Y%m%d%H%i%s');
+
+select version();
+select user();
+select database();
+
+--当前时间戳
+select current_timestamp();
+--流程控制函数
+-- if 函数 if else的效果
+select if(1=1,'I like you ,but just like you',10);
+-- case 函数 类似switch() case {}
+select 
+	case age 
+	when 18 then  'you are too young'
+	when 19 then 'you are a beauty'
+	else  'you are a adult'
+	end as descriptions
+from tf_f_user;
+
+-- case 函数 类似switch() case {}
+/*
+case 要判断的字段或表达式
+when 常量1 then 要显示的值1 或语句1 
+when 常量2 then 要显示的值2 或语句2 
+when 常量3 then 要显示的值2 或语句3 
+else 要显示的值n或语句n
+*/
+select 
+	case age 
+	when 18 then  'you are too young'
+	when 19 then 'you are a beauty'
+	else  'you are a adult'
+	end as descriptions
+from tf_f_user;
+
+-- case函数 类似于多重if
+/*
+case 
+when con1 then result1
+when con2 then result2
+when con3 then result3
+else result4
+end
+*/
+select  age, 
+case 
+when age>18 then 'you are a adult'
+when age=18 then 'you are a favariote girl'
+else 'you should study every day'
+end from tf_f_user;
+
+
+select lpad('konglc',10,'*') ;
+select rpad('lubo',10,'#');
+
+--插入多行数据
+ insert into student
+ values('03','konglc'),('04','konglc'),('06','konglc');
+ 
+ -- union all 没有排重功能
+ insert into student
+  select '01','konglc'
+  union all
+  select '01','konglc';
+ 
+ -- union 可以排重
+ insert into student
+  select '01','konglc'
+  union 
+  select '01','konglc';  
+```
+
+第 1 章 mysql数据库基本操作`DDL`
+===
+
+	DDL操作之数据库操作
+---
+
+```sql
+-- 显示当前数据库
+show databases;
+-- 创建数据库
+create database mydb1;
+-- 不存在则创建数据库
+create database if not exists konglc_base;
+-- 选择使用哪个数据库
+use mydb1;
+-- 删除数据库 
+drop database mydb1;
+drop database if exists mydb1;
+-- 显示变量
+show variables where variable_name like '%haracter_set_results%';
+
+## 查看表的状态
+show table status from konglc_test(database) where name = "t_acct"(table name);
+show table status from konglc_test where name = "t_acct";
+```
+
+	DDL 之建表操作
+---
+
+```sql
+drop table if EXISTS student;
+create table if not exists student(
+	sid int,
+	sname varchar(20),
+	gender char(1),
+	birth date,
+	address varchar(200),
+	score double
+);
+```
+
+​		使用`navicat`连接数据库时出现 1521错误 
+
+​		解决办法 登录mysql客户端 执行
+
+```sql
+ALTER USER 'lc_konglc'@'%' IDENTIFIED WITH mysql_native_password BY 'lc_konglc';
+```
+
+修改表操作
+
+```sql
+ALTER TABLE 表名 ADD 【COLUMN】 字段名 字段类型 【FIRST|AFTER 字段名】;
+```
+
+```sql
+create table if not exists  dept(
+-- int类型，自增
+deptno int(2) auto_increment,
+dname varchar(14),
+loc varchar(13),
+-- 主键
+primary key (deptno)
+);
+
+desc dept;
+-- 添加列
+alter table dept add  ddesc varchar(200) after dname;
+-- 修改列的数据类型
+alter table dept modify loc int(8);
+-- 重命名列
+alter table dept change loc loc_1 decimal(5,2);
+-- 删除列
+alter table dept drop ddesc;
+
+-- 重命名
+create table dept_ as select * from dept where 1 > 2;
+rename table dept_ to dept_1;
+desc dept_2;
+alter table dept_1 rename to dept_2;
+```
+
+mysql导出数据
+
+```sql
+ -- mysql导出数据 
+ 
+ -- -d 表示值导出表结构 
+ mysqldump -u lc_konglc -h 192.168.10.132 -P 12666 -plc_konglc -B konglc_base -d > konglc_base.sql
+ 
+-- 导出某个表
+mysqldump -d -u lc_konglc -h 192.168.10.132 -P 12666 -plc_konglc konglc_base t_acct
+
+-- 导出表结构及表数据
+mysqldump  -u lc_konglc -h 192.168.10.132 -P 12666 -plc_konglc konglc_base tbl_employee > konglc_base.tbl_employee.sql
+
+-- 表数据入库
+source /home/chaochao/chaochao/mysql/konglc_base.tbl_employee.sql
+```
+
+第 2 章mysql 约束详解
+===
+
+1 非空约束
+---
+
+限定某个字段/某列的值不允许为空
+
+​	关键字 **`not null`**
+
+**特点:**
+
+默认，所有的类型的值都可以是NULL，包括INT、FLOAT等数据类型
+非空约束只能出现在表对象的列上，只能某个列单独限定非空，不能组合非空
+一个表可以有很多列都分别限定了非空
+空字符串''不等于NULL，0也不等于NULL
+
+**添加非空约束**
+
+建表时
+
+```sql
+CREATE TABLE 表名称(
+字段名 数据类型,
+字段名 数据类型 NOT NULL,
+字段名 数据类型 NOT NULL
+);
+
+-- 添加非空约束
+alter table t_course modify c_description   varchar(200) not null; 
+```
+
+2 唯一约束
+---
+
+```sql
+drop table  if exists t_course;
+create table if not exists t_course(
+	c_id int unique,
+	c_name varchar(100) unique,
+	c_description varchar(200)
+);
+
+desc t_course;
+-- 
+insert into t_course(c_id,c_name,c_description) values(1,'konglc','lingchao');
+-- 收到非空约束限制 无法插入
+insert into t_course(c_id,c_name,c_description) values(1,'konglc','Yuqi');
+-- 单独指定 每个列都必须是唯一的
+insert into t_course(c_id,c_name,c_description) values(1,'chaochao','Yuqi');
+-- 插入成功
+insert into t_course(c_id,c_name,c_description) values(2,'chaochao','Yuqi');
+
+alter table t_course modify c_id  int unique;
+
+-- 添加唯一约束
+alter table t_course add constraint uk_id_name unique(c_id,c_name);
+
+
+
+create table if not exists _user(
+u_id int not null,
+u_name varchar(25),
+u_password varchar(16),
+-- 使用表级约束语法 表示用户名密码组合不能重复
+constraint uk_name_pwd unique(u_name,u_password)
+);
+
+-- 3条数据均插入成功
+insert into _user(u_id,u_name,u_password) values
+(1,'konglingchao','123456'),
+(2,'Yuyi','abc'),
+(3,'Yuqi','abc');
+-- 插入数据不成功 (违反组合唯一约束)
+insert into _user(u_id,u_name,u_password) values
+(1001,'Yuqi','abc');
+
+-- 建表后添加唯一约束
+alter table tableName add unique key(字段列表);
+
+alter table dept add unique key(dname);
+desc dept;
+
+```
+
+关于复合唯一约束
+
+```sql
+create table if not exists tableName(
+	cloumn1 field_type,
+    cloumn2 field_type,
+    cloumn3 field_type,
+    unique key(cloumn1,cloumn3)-- 字段列表中写的是多个字段名 多个字段名用逗号分隔 表示复合唯一 即多个字段的组合是唯一的
+);
+
+-- 添加唯一性约束的列上也会自动创建唯一索引。
+-- 删除唯一约束只能通过删除唯一索引的方式删除。
+-- 删除时需要指定唯一索引名，唯一索引名就和唯一约束名一样。
+-- 如果创建唯一约束时未指定名称，如果是单列，就默认和列名相同；如果是组合列，那么默认和()
+-- 中排在第一个的列名相同。也可以自定义唯一性约束名
+-- 查看表索引
+show index from tableName;
+drop table if exists t_student;
+create table if not exists t_student(
+	s_id int,
+	s_name varchar(20),
+	s_tel char(11) unique key,
+	s_car_id char(18) unique  key
+);
+
+drop table if exists t_course;
+create table if not exists t_course(
+	c_id int,
+	s_id int,
+	s_score int,
+	unique key(c_id,s_id)
+);
+
+-- 删除唯一索引 只能通过删除唯一约束
+
+```
+
+3 主键约束
+---
+
+建表时 指定主键约束
+
+```sql
+create table if not exists tableName(
+	字段1 字段类型
+    字段2 字段类型
+    字段3 字段类型
+    [constraint 约束名] primary key(字段名)
+);
+```
+
+```sql
+--  建表时指定唯一约束
+create table if not exists temp(
+	id int primary key,
+	name varchar(100) not null
+);
+alter table temp change name  t_name varchar(100) not null;
+desc temp;
+
+insert into temp(id,t_name) values
+(1,'konglc'),
+(2,'chaochao'),
+(1001,'yangyuqi');
+
+-- 一个表不能建立两个主键
+create table if not exists t_temp(
+	t_id int primary key,
+	t_name varchar(200) primary key
+);
+-- mysql lc_konglc@192.168.10.132:konglc_base> create table if not exists t_temp( t_id int primary key, t_name varchar(200) primary key);                                                                           
+-- (1068, 'Multiple primary key defined')
+
+-- 列级约束
+create table if not exists temp_1(
+	t_id int  primary key auto_increment,
+	t_name varchar(20) 
+);
+-- mysql的主键名称总是 PRIMARY
+show index from temp_1;
+
+--  表级约束
+create table if not exists temp_2 (
+	t_id int not null auto_increment,
+	t_name varchar(20), 
+	t_password varchar(15),
+	constraint pk_temp_2_id primary key(t_id) 
+);
+-- 建表之后添加约束
+alter table temp_2 add primary key(t_name,t_password);
+
+show index from temp_2;
+-- 关于复合主键
+drop table if exists tableName;
+create table if not exists tableName(
+	字段1 字段1类型,
+	字段2 字段2类型,
+	字段3 字段3类型,
+	字段4 字段4类型,
+	primary key(字段名1,字段名2)
+);
+-- example :
+drop table if  exists t_student;
+create table if not exists t_student(
+	s_id int primary key,
+	s_name varchar(20) not null
+);
+
+drop table if exists t_course;
+create table if not exists t_course(
+	c_id int primary key,
+	c_name varchar(20) not null
+);
+
+drop table if exists stu_course;
+create table if not exists stu_course(
+	s_id int,
+	c_id int,
+	score int,
+	primary key(s_id,c_id)
+);
+
+desc t_student; 
+insert into t_student(s_id,s_name) values
+(1001,'konglc'),
+(1002,'yangyuqi');
+
+insert into t_course(c_id,c_name) values
+(2001,'mysql'),
+(2002,'java'),
+(2003,'redis'),
+(2004,'springboot'),
+(2005,'mybatis');
+
+insert into stu_course(s_id,c_id,score) values
+(1001,2002,98),
+(1001,2001,88),
+(1001,2004,78),
+(1002,2003,60),
+(1002,2005,90);
+
+select a.s_id,a.s_name,c.c_name,b.score from t_student a left join stu_course b on(a.s_id=b.s_id) left join t_course c on(c.c_id=b.c_id);
+```
+
+5 自增列 auto_increment
+---
+
+**某个字段的值自增**
+
+**特点和要求**
+
+1. 一个表最多只能有一个自增长列
+2. 当需要产生唯一标识符或顺序值时,可设置自增长
+3. 自增长约束的列必须是键列(主键列和唯一键列)
+4. 自增约束列的类型必须是整数类型
+5. 如果自增列指定了0和null 会在当前最大值的基础上自增 如果自增列手动指定了具体的值 直接赋值为具体值
+
+```sql
+-- 如何指定自增约束
+create table if not exists tableName(
+	字段名 数据类型 primary key auto_increment,
+	字段名 数据类型 unique key not null,
+	字段名 数据类型 unique key,
+	字段名 数据类型 not null,
+	字段名 数据类型 not null default 'default value'
+);
+
+create table if not exists tableName(
+	字段名 数据类型 default 'default value',
+	字段名 数据类型 unique key auto_increment,
+	字段名 数据类型 not null default 'default value',
+	primary key(字段名)
+);
+
+show tables like '%employee%';
+
+drop table if exists employee;
+create table if not exists employee (
+	e_id int primary key auto_increment,
+	e_name varchar(20)
+) auto_increment=1001;-- 指定自增的初始值
+
+insert into employee(e_name) values
+('konglc'),
+('YuQi');
+
+-- 查看自增主键的值
+show variables like '%auto_increment%'
+show create table employee;
+-- 建表之后添加自增长约束
+drop table if exists employee_1;
+create table if not exists employee_1(
+	e_id int primary key,
+	e_name varchar(20)
+);
+
+--  修改字段为自增
+alter table tableName modify columnName dataType auto_increment;
+alter table employee_1 modify  e_id  int auto_increment;
+alter table tableName modify columnName dataType; ## 去掉auto_increment 相当于删除自增
+```
+
+6 foreign key 约束
+---
+
+**特点** :从表的外键列必须引用参考主表的主键列或唯一约束列 因为被依赖或被参考的值必须是唯一的
+
+第 3 章 mysql 索引
+===
+
+3.1 索引的创建
+---
+
+```sql
+-- 索引的分类
+/**
+1 唯一索引 
+	由unique参数可设置索引为唯一性索引,限制该索引的值必须是唯一的,但允许有空值
+2 主键索引
+	就是一种特殊的唯一性索引,在唯一索引的基础上增加了不唯一约束 也就是not null + unique
+	一张表里最多只用一个主键索引
+3 普通索引 
+	在创建时 不加任何限制条件 只是用于提高查询效率 这类索引可以创建在任何数据类型的列上
+	其值是否非空或唯一,要由字段本身的完整性和约束条件决定,建立索引后 可以通过索引进行查
+	询
+4  全文索引
+	 全文索引是目前搜索引擎中使用的一种关键技术 它能够利用(分词技术)等多种算法智能分析出
+	 文本文字中关键词的频率和重要性 然后按照一定的算法规则智能的筛选出我们想要的结果 全
+	 文索引非常适合大型数据库集 对于小的数据集 它的用处比较小
+	使用参数fulltext可以设置索引为全文索引,在定义索引的列上支持值的全文查找 允许在这些索引列中
+	允许这些列插入重复值和空值
+5  单列索引
+	在表中的单个字段上创建索引,单列索引只能根据该字段进行索引,单列索引可以是普通索引 也可以是唯一性索引
+	还可以是去全文索引 只要保证该索引值对应一个字段即可
+6 多列索引(组合 联合)
+	多列索引是在表的多个字段上创建一个索引 该索引指向创建时对应的多个字段,可以通过这个几个字段进行查询,但是
+	只有这些查询条件中使用了这些字段中的第一个字段时才会被使用,使用组合索引时 遵循最左前缀原则
+7 空间索引	
+	不同存储引擎支持的索引是不一样的
+		InnoDB : 支持B-Tree Full-text 不支持hash索引
+		MyISAM 支持B-Tree Full-text 不支持hash索引	
+*/
+/**
+	创建索引
+		
+*/
+-- 1 创建表的时候创建索引
+-- 使用create table 创建表时 除了可以定义列的数据类型外 还可以定义主键约束 外键约束或者唯一性约束
+-- 但不论创建哪种约束,在定义约束的同时相当于在指定的列上创建了一个索引
+drop table if exists dept;
+create table if not exists dept(
+	dept_id int primary key auto_increment,
+	dept_name varchar(20)
+);
+
+show  create table dept;
+show table status like 'dept';
+show index from dept;
+
+-- 有主键约束 唯一约束的字段 外键约束的字段上都会添加索引
+drop table if exists emp;
+create table if not exists emp(
+	emp_id int primary key auto_increment,
+	emp_name varchar(20) unique,
+	dept_id int,
+	--  添加外键约束
+	constraint emp_dept_id_fk foreign key(dept_id) references dept(dept_id)
+);
+show index from emp;
+
+## 显式方式创建索引
+## 创建索引的格式
+	create table table_name [col_name data_type] [unique|fulltext|spatial|index|key] [index_name] [col_name length]) [asc|desc]
+	-- unique fulltext spatial 为可选参数 分别表示唯一索引 全文索引和空间索引
+	-- index key为同义词 两者的作用相同 用来指定创建索引;
+	-- index_name 是索引名称 为可选参数 如果不指定 如果不指定mysql默认col_name为索引名
+	-- col_name 为创建索引的字段列 该列必须从数据表中定义的多个列中选择
+	-- length 为可选参数 表示索引长度 只用字符串类型的字段才能指定索引长度
+	-- asc或desc指定升序或者降序的索引值存储
+	
+ -- 1 创建唯一索引
+ drop table if exists book;
+ create table if not exists book(
+	book_id int,
+	book_name varchar(100),
+	authors varchar(100),
+	info varchar(100),
+	comment varchar(100),
+	year_publication year,
+	# 声明有索引的字段,在添加数据时 要保证唯一性 但是可以添加null值
+	unique index uk_idx_bname(book_name)
+ ); 
+ -- 自增列必须是主键列或者是唯一列
+ alter table book modify book_id int primary key auto_increment;
+ show index from book;
+ insert into book(book_name,authors,info,year_publication) values
+ ('MySql高级','康师傅','适合有数据库开发经验的人员学习','2022');
+
+-- 2主键索引
+--  通过定义主键约束的方式定义主键索引
+drop table if  exists book2;
+create table if not exists book2(
+	book_id int primary key,
+	book_name varchar(100),
+	authors varchar(100),
+	info varchar(100),
+	comment varchar(100),
+	year_publication year
+) auto_increment=1001;
+
+alter table book2 modify book_id int primary key;
+show index from book2;
+# 通过删除注解约束的方式删除主键的索引
+alter table book2 drop primary key;
+
+-- 3 创建单列索引
+
+drop table if exists book3;
+create table if not exists book3(
+	book_id int ,
+	book_name varchar(100),
+	authors varchar(100),
+	info varchar(100),
+	comment varchar(100),
+	year_publication year,
+	-- 单列索引
+	unique index idx_bname(book_name)
+) auto_increment=1001;
+
+show index from book3;
+
+-- 4 创建联合索引
+drop table if exists book4;
+create table if not exists book4(
+	book_id int ,
+	book_name varchar(100),
+	authors varchar(100),
+	info varchar(100),
+	comment varchar(100),
+	year_publication year,
+	-- 单列索引
+	unique index idx_bid_bname(book_id,book_name,authors)
+) auto_increment=1001;
+
+show index from book4;
+explain select * from book4 where book_id = 1001 and book_name = 'mysql';-- 使用到索引 最左前缀原则
+explain select * from book4 where   book_name = 'mysql'; -- 没有使用到索引
+
+
+-- 5 创建全文索引
+drop table if exists book5;
+create table if not exists book5(
+	book_id int primary key auto_increment,
+	book_name varchar(100),
+	authors varchar(100),
+	info varchar(100),
+	comment varchar(100),
+	year_publication year,
+	-- 单列索引
+	fulltext index fullidx_bid_bname(info)
+) auto_increment=1001;
+
+show index from book5;
+
+
+drop table if exists article;
+create table if not exists article(
+	id int unsigned primary key auto_increment,
+	title varchar(200),
+	body text,
+	fulltext index index_article_title_body(title,body)
+);
+
+show index from article;
+
+-- 全文索引用 match + agaist方式查询
+
+-- 6 表创建完成之后添加索引
+drop table if exists book6;
+create table if not exists book6(
+	book_id int,
+	book_name varchar(100),
+	authors varchar(100),
+	info varchar(100),
+	comment varchar(100),
+	year_publication year
+) auto_increment=1001;
+
+show index from book6;
+
+alter table book6 add index idx_cmt(comment);
+alter table book6 add unique index uk_idx_bname(book_name);
+alter table book6 add index book_id_name_info(book_id,book_name,info);
+
+
+drop table if exists book7;
+create table if not exists book7(
+	book_id int,
+	book_name varchar(100),
+	authors varchar(100),
+	info varchar(100),
+	comment varchar(100),
+	year_publication year
+) auto_increment=1001;
+
+-- 创建索引
+create index idx_cmt on book7(book_id);
+-- 删除索引
+alter table book7 drop index idx_cmt;
+
+show index from book7;
+
+-- 创建唯一索引
+alter table book7 drop index uk_idx_bname;
+create unique index book_id_name_info on book7(book_id,book_name,info);
+```
+
+3.2 mysql 索引的删除
+---
+
+```sql
+-- 使用alter table 删除索引
+alter table table_name drop index index_name;
+
+-- 使用drop语句删除索引
+drop index indexName on tableName;
+
+-- 语句执行完毕之后使用查看是否删除完成
+show index from tableName;
+
+-- 删除列 索引同时也会被删除
+alter table book7 drop column book_name;
+
+-- 删除表中的列时 如果要删除的列为索引的组成部分 则该列也会从索引中删除 如果组成索引的索引列都被删除 则整个索引将被删除
+
+```
+
+3.3 MySql8.0 的新特性
+---
+
+支持降序索引
+
+MySql8.0之前的版本依然是升序索引,使用时进行反向扫描,这大大降低了数据库的效率
+
+```sql
+delimiter //
+create procedure ts_insert()
+begin
+	declare i int default 1;
+	while i < 800 do
+		insert into tsl select rand()*8000,rand()*8000;
+		set i = i + 1;
+	end while;
+	commit;
+end //
+delimiter;
+call ts_insert();
+select * from tsl;
+
+-- 查看执行计划
+explain select * from tsl order by a,b desc limit 5;
+```
+
+**隐藏索引**
+
+从mysql8.xxx开始支持隐藏索引(invisiable idnexes) 只需要将待删除的索引设置为隐藏索引,使用查询优化器就不会再使用这个索引(即使使用 force index(强制使用索引) 优化器也不会使用该索引) 确认将索引设置为隐藏索引后系统不受任何影响 就可以彻底删除索引 这种通过先索引设置为隐藏列,在删除索引的方式就是软删除
+
+主键不能设置为隐藏索引,当表中没有显式主键时,表中第一个唯一非空索引会成为隐式主键 也不能设置隐藏索引
+
+
+
+索引默认是可见的 在使用create table create index 或者alter table 等语句时 可以通过visiable 
+
+```sql
+drop table if exists book8;
+create table if not exists book8(
+	book_id int,
+	book_name varchar(100),
+	authors varchar(100),
+	info varchar(100),
+	comment varchar(100),
+	year_publication year,
+	## 创建不可见索引
+	index index_book_name(comment) invisible
+) auto_increment=1001;
+show index from book8;
+
+```
+
+```sql
+-- 2 隐藏索引
+drop table if exists book8;
+create table if not exists book8(
+	book_id int,
+	book_name varchar(100),
+	authors varchar(100),
+	info varchar(100),
+	comment varchar(100),
+	year_publication year,
+	## 创建不可见索引
+	index index_book_name(comment) invisible
+) auto_increment=1001;
+show index from book8;
+
+
+-- 创建表以后
+alter table book8  add unique index uk_index_info(info) invisible;
+
+drop index uk_index_info on book8;
+drop index index_book_name on book8;
+
+drop index index_year_pub on book8;
+create index index_year_pub on book8(info) invisible;
+
+show index from book8;
+
+explain select * from book8 where info = 'Yuqi';
+
+-- 修改索引的可见性
+alter table book8 alter index index_year_pub visible;
+```
+
+```tex
+当索引被隐藏时 它的内容仍然是和正常索引一样实时更新 如果索引需要长期被隐藏 那么可以将其删除 因为索引的存在会影响插入 更新和删除性能
+```
+
+​		**是隐藏索引对优化器可见**
+
+```sql
+select @@optimizer_switch \G
+-- 修改 隐藏索引为可见
+set session optimizer_switch='use_invisible_indexes=on';
+```
+
+![image-20220221004448725](C:\Users\ASUS\AppData\Roaming\Typora\typora-user-images\image-20220221004448725.png)
+
+```sql
+use_invisible_indexes=off
+
+show index from book8;
+```
+
+3.4 索引的设计原则
+---
+
+```sql
+#04-索引的设计原则
+select floor(rand()*52;
+#1. 数据的准备
+
+#1.创建学生表和课程表
+drop table if exists student_info;
+create table if not exists `student_info` (
+ `id` int(11) auto_increment,
+ `student_id` int not null ,
+ `name` varchar(20) default null,
+ `course_id` int not null ,
+ `class_id` int(11) default null,
+ `create_time` datetime default current_timestamp on update current_timestamp,
+ primary key (`id`)
+) engine=innodb auto_increment=1 default charset=utf8;
+
+drop table if exists course;
+create table if not exists `course` (
+`id` int(11) not null auto_increment,
+`course_id` int not null ,
+`course_name` varchar(40) default null,
+primary key (`id`)
+) engine=innodb auto_increment=1 default charset=utf8;
+
+
+#函数1：创建随机产生字符串函数
+delimiter //
+create function rand_string(n int) 
+	returns varchar(255) #该函数会返回一个字符串
+begin 
+	declare chars_str varchar(100) default 'abcdefghijklmnopqrstuvwxyzABCDEFJHIJKLMNOPQRSTUVWXYZ';
+	declare return_str varchar(255) default '';
+	declare i int default 0;
+	while i < n do 
+		set return_str =concat(return_str,substring(chars_str,floor(1+rand()*52),1));
+		set i = i + 1;
+	end while;
+    return return_str;
+end //
+delimiter ;
+
+select @@log_bin_trust_function_creators;
+
+set global log_bin_trust_function_creators = 1;
+select rand_string(10);
+
+#函数2：创建随机数函数
+delimiter //
+create function rand_num (from_num int ,to_num int) returns int(11)
+begin   
+declare i int default 0;  
+set i = floor(from_num +rand()*(to_num - from_num+1))   ;
+return i;  
+end //
+delimiter ;
+
+# 存储过程1：创建插入课程表存储过程
+delimiter //
+create procedure  insert_course( max_num int )
+begin  
+declare i int default 0;   
+ set autocommit = 0;    #设置手动提交事务
+ repeat  #循环
+ set i = i + 1;  #赋值
+ insert into course (course_id, course_name ) values (rand_num(10000,10100),rand_string(6));  
+ until i = max_num  
+ end repeat;  
+ commit;  #提交事务
+end //
+delimiter ;
+
+
+# 存储过程2：创建插入学生信息表存储过程
+delimiter //
+create procedure  insert_stu( max_num int )
+begin  
+declare i int default 0;   
+ set autocommit = 0;    #设置手动提交事务
+ repeat  #循环
+ set i = i + 1;  #赋值
+ insert into student_info (course_id, class_id ,student_id ,name ) values (rand_num(10000,10100),rand_num(10000,10200),rand_num(1,200000),rand_string(6));  
+ until i = max_num  
+ end repeat;  
+ commit;  #提交事务
+end //
+delimiter ;
+
+#调用存储过程：
+call insert_course(100);
+
+select count(*) from course;
+
+call insert_stu(1000000);
+
+select count(*) from student_info;
+
+#2. 哪些情况适合创建索引
+#① 字段的数值有唯一性的限制
+#② 频繁作为 WHERE 查询条件的字段
+# 业务上具有唯一特性的字段 即使是组合字段 也必须创建成唯一索引
+#查看当前stduent_info表中的索引
+show index from student_info;
+desc student_info;
+#student_id字段上没有索引的：
+select course_id, class_id, name, create_time, student_id 
+from student_info
+where student_id = 123110; #0.477ms
+
+#给student_id字段添加索引
+alter table student_info add index idx_sid(student_id);
+
+#student_id字段上有索引的：
+select course_id, class_id, name, create_time, student_id from student_info where student_id = 123110; #1ms
+
+#③ 经常 GROUP BY 和 ORDER BY 的列
+# 索引就是让数据按照某种顺序进行存储或检索,因此当我们使用group by 对数据进行分组查询时,或者
+# 使用order by 对数据进行排序的时候,就需要对分组或者排序的字段进行索引。如果待排序的列有多个
+# 那么可以在这些列上建立组合索引
+
+#student_id字段上有索引的：
+select student_id, count(*) as num from student_info group by student_id limit 100; #1ms
+
+#删除idx_sid索引
+drop index idx_sid on student_info;
+
+#student_id字段上没有索引的：
+select student_id, count(*) as num from student_info group by student_id limit 100; #5.37s
+
+#再测试：
+show index from student_info;
+
+#添加单列索引
+alter table student_info add index idx_sid(student_id);
+
+alter table student_info add index idx_cre_time(create_time);
+
+select student_id, count(*) as num from student_info group by student_id order by create_time desc limit 100;  #7.302s
+
+#修改sql_mode
+
+select @@sql_mode;
+
+set @@sql_mode = 'STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
+#添加联合索引
+drop index idx_sid on student_info;
+drop index idx_cre_time on student_info;
+drop index idx_sid_cre_time on student_info;
+alter table student_info add index idx_sid_cre_time(student_id,create_time desc);
+-- 要把group by中的字段写在前面 把 order by 中的字段写在后面
+select student_id, count(*) as num from student_info group by student_id order by create_time desc limit 100;  #0.546s
+explain select student_id, count(*) as num from student_info group by student_id order by create_time desc limit 100;
+#再进一步：
+drop index idx_cre_time_sid on student_info;
+alter table student_info add index idx_cre_time_sid(create_time desc,student_id);
+show index from student_info;
+drop index idx_sid_cre_time on student_info;
+
+select student_id, count(*) as num from student_info group by student_id order by create_time desc limit 100;  #6.17s
+explain select student_id, count(*) as num from student_info group by student_id order by create_time desc limit 100;  #6.17s
+
+
+#④ UPDATE、DELETE 的 WHERE 条件列
+show index from student_info;
+
+update student_info set student_id = 10002 where name = '462eed7ac6e791292a79';  #4.865s
+
+#添加索引
+alter table student_info add index idx_name(name);
+
+update student_info set student_id = 10001 where name = '462eed7ac6e791292a79'; #0.001s
+
+# ⑤ DISTINCT 字段需要创建索引
+select distinct(student_id) from student_info;
+# ⑥ #### 多表 JOIN 连接操作时，创建索引注意事项
+
+#首先，`连接表的数量尽量不要超过 3 张`，因为每增加一张表就相当于增加了一次嵌套的循环，数量级增长会非常快，严重影响查询的效率。
+
+#其次，`对 WHERE 条件创建索引`，因为 WHERE 才是对数据条件的过滤。如果在数据量非常大的情况下，没有 WHERE 条件过滤是非常可怕的。
+
+#最后，`对用于连接的字段创建索引`，并且该字段在多张表中的`类型必须一致`。比如 course_id 在 student_info 表和 course 表中都为 int(11) 类型，
+#而不能一个为 int 另一个为 varchar 类型。使用函数索引失效
+
+
+select s.course_id, name, s.student_id, c.course_name 
+from student_info s join course c
+on s.course_id = c.course_id
+where name = 'wkJOTb'; #0.001s
+
+drop index idx_name on student_info;
+
+
+select s.course_id, name, s.student_id, c.course_name from student_info s join course c on s.course_id = c.course_id where name = 'wkJOTb'; #0.227s
+
+
+#⑦使用列的类型小的创建索引
+/*
+	这里所说的类型大小指的是该类型表示的数据范围的大小
+	我们在定义表结构的时候要显式的指定列的类型,以整数类型为例,有tinyint mediumint int bigint 
+	他们占有的存储空间一次递增,能表示的整数范围当然也是一次递增,我们想要对某个列建索
+	引的话.在表示的整数范围允许的情况下,尽量让索引列使用较小的类型,比如我们能使用int 就
+	不要用bigint 能使用mediumint 就不要使用int
+	这是因为:
+		数据类型越小 在查询时进行的比较操作越快
+		数据类型越小 索引占用的存储空间就越少,在一个数据也内就可以放更多的记录,从而
+		减少磁盘IO带来的性能损耗,也就意味着可以把更多的数据页缓存在内存中,从而加快
+		读写效率
+		
+	这个建议对表的主键来说更加适用 因为不仅是聚簇索引中会存储主键值,其他所有的二级索引的节点
+	都会存储一份记录主键的值 如果主键适用更小的数据类型,也就意味着节省更多的存储空间和更高效的IO
+	
+*/
+
+#⑧使用字符串前缀创建索引
+	/*
+		B+树索引中的记录需要把该列的完整字符串存储起来 更费时. 而且字符串越长,在索引中占用的存储空间越大
+		如果B+树索引中索引列存储的字符串很长,那在做字符串比较时会占用更多的时间
+		我们可以通过截取字符串前面的一部分内容来建立索引,这个就叫前缀索引,这样在查询记录时 虽然不能精确的
+		定位到记录的位置,但是能定位到相应前缀所在的位置,然后根据前缀相同的记录的主键值回表查询完整字符串
+		值,既节约空间又节省了字符串的比较时间,还能大体解决排序问题
+	*/
+create table if not exists shop(
+	address varchar(120) not null
+);
+create index inx_addr on shop(address);
+show index from shop;
+
+-- 字段在全部数据中的选择性
+select  count(distinct address)/count(1) from shop;-- 越接近1区分度越好
+-- ***在varchar字段上建立索引时,必须指定索引的长度,没必要对全字段建立索引,根据实际文本区分度决定索引长度
+-- 索引的长度和区分度是一对矛盾体,一般对字符串类型数据,长度为20 的索引,区分度会达到90%以上,可以使用
+-- count(distinct left(列名,索引长度))/count(*)的区分度来确定
+-- 取前4个字符
+select left('konglingchao',4) from dual;
+-- 
+#⑨ 区分度高(散列性高)的列适合作为索引
+-- 列的基数指的是某一列中不重复数据的个数,在记录行数一定的情况下,该列的基数越大,该列中的值月分散,列的基数越小,该列中的值越集中
+-- 这个列的基数指标非常重要,直接影响我们是否能有效的利用索引 最好为基数大的列建立索引,为基数太小的列建立索引效果可能不好
+-- 可以使用公式 select count(distinct a)/count(*) from t1计算区分度 一般超过33%/就算是比较好的索引了
+
+#⑩ 使用最频繁的列放到联合索引的左侧
+select * from student_info where student_id = 10013 and course_id = 100;
+
+#补充：在多个字段都要创建索引的情况下，联合索引优于单值索引
+## 建议单表的数量不要超过6个
+	-- 每个索引都会占有磁盘空间,索引越多,需要的磁盘空间就越大
+	-- 索引会影响 insert delete update 等语句的性能,因为表中的数据更改的同时 索引也会进行调整和更新 会造成负担
+	-- 优化器在选择如何优化查询时,会根据统一信息,对每一个可以用到的索引进行评估,以生产一个最好的执行计划
+	-- 如果同时有多个索引都可以用于查询,会增加MySQL优化器生成执行计划时间,降低查询性能
+# 3. 哪些情况不适合创建索引
+# ① 在where中使用不到的字段，不要设置索引
+	where 条件(包括 group by order by )
+# ② 数据量小的表最好不要使用索引
+
+# ③ 有大量重复数据的列上不要建立索引
+#结论：当数据重复度大，比如`高于 10% `的时候，也不需要对这个字段使用索引。
+
+#④ 避免对经常更新的表创建过多的索引
+
+#⑤ 不建议用无序的值作为索引
+
+# ⑥ 删除不再使用或者很少使用的索引
+
+# ⑦ 不要定义冗余或重复的索引
+create table if not exists person_info(
+	id int unsigned not null auto_increment,
+	name varchar(100) not null,
+	birthday date not null,
+	phone_number char(11) not null,
+	country varchar(100) not null,
+	primary key(id),
+	key index_name_birthday_phone_number(name(10),birthday,phone_number)
+	-- 冗余索引
+	-- key index_name(name(10))
+);
+```
+
+第 4 章 性能分析工具的使用
+===
+
+在数据库调优中,我们的目标就是响应时间更快,吞吐量更大,利用宏观的监控工具和微观的日志分析可以帮我们快速找到调优的思路和方式
+
+4.1 数据库服务器的优化步骤
+---
+
+
+
+4.2 查看系统性能参数
+---
+
+在mysql中可以使用`show status`语句查看一些mysql数据库服务器的性能参数,执行频率
+
+show status的语法如下
+
+```sql
+show [global session] status like '参数';
+-- 查看表的状态
+show table status from konglc_base where name='student_info';
+-- 查看最后一次查询来自多少个数据页
+ show status like 'last_query_cost';
+ -- 查看慢查询日志
+ mysql的慢查询日志,用来记录mysql中相应时间超过阈值的语句,具体指运行时间超过long_query_time值的sql,则会被记录到慢查询日志中,long_query_time的默认值是10,意思是运行10s以上的语句(不含10s),认为是超出了我们最大的忍耐时间;
+ 默认情况下,mysql默认没有开启慢查询日志,需要我们手动来设置这个参数,如果不是调优的话,一般不建议调整该参数
+ 慢查询日志会将日志写入文件
+ 
+ -- 开启慢查询日志参数
+
+ ## 开启慢查询日志
+slow_query_log    = 1 
+## 慢查询日志位置
+slow_query_log_file = /var/log/mysql/mysql-slow.log
+## 慢查询时间
+long_query_time = 2 
+
+## 查看慢查询日志
+show variables like '%slow_query_log';
+
+##是否开启慢查询
+set global slow_query_log=1; 
+## 慢查询日志文件
+slow_query_log_file
+```
+
+```shell
+show variables like '%slow_query_log%'                 
++---------------------+-------------------------------+
+| Variable_name       | Value                         |
++---------------------+-------------------------------+
+| slow_query_log      | ON                            |
+| slow_query_log_file | /var/log/mysql/mysql-slow.log |
++---------------------+-------------------------------+
+```
+
+```shell
+## 查看慢查询的时间
+ show variables like '%long_query_time%';
++-----------------+----------+
+| Variable_name   | Value    |
++-----------------+----------+
+| long_query_time | 2.000000 |
++-----------------+----------+
+```
+
+```shell
+## 查看慢查询的次数
+show global status like '%Slow_queries%';
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| Slow_queries  | 8     |
++---------------+-------+
+```
+
+```shell
+## 查询扫描过的最小的记录数
+show variables like 'min%' ;
++------------------------+-------+
+| Variable_name          | Value |
++------------------------+-------+
+| min_examined_row_limit | 0     |
++------------------------+-------+
+```
+
+
+
+```sql
+ ## 删除外键
+ alter table student drop foreign key FK_student_class_r;
+ 
+ -- 创建存储过程
+delimiter //
+create  procedure insert_stu1(max_num int)
+begin
+	declare i int default 0;
+	## 设置手动提交事务
+	set autocommit = 0;
+	set i = i+1;
+	repeat
+		insert into student(class_id,student_name,student_age) values
+		(rand_num(10,1000),rand_string(6),rand_num(0,100));
+		until i = max_num
+	end repeat;
+	commit;
+end //
+delimiter ;
+
+
+
+-- 重建存储过程
+drop procedure if exists `insert_stu1`$$
+
+create definer=`lc_konglc`@`%` procedure `insert_stu1`(max_num int)
+begin
+	declare i int default 0;
+	## 设置手动提交事务
+	set autocommit = 0;
+	set i = i+1;
+	repeat
+		insert into stu(class_id,student_name,student_age) values
+		(rand_num(10,1000),rand_string(6),rand_num(0,100));
+		until i = max_num
+	end repeat;
+	commit;
+end$$
+
+delimiter ;
+```
+
+慢查询日志分析工具
+
+```shell
+## 在生产环境中 如果要手工分析日志 查找 分析sql 显然是一个体力活 mysql提供了日志分析工具 mysqldumpslow
+mysqldumpslow 
+
+选项 : 
+-s ORDER     what to sort by (al, at, ar, c, l, r, t), 'at' is default
+                al: average lock time
+                ar: average rows sent
+                at: average query time
+                 c: count
+                 l: lock time
+                 r: rows sent
+                 t: query time 
+ -t NUM       just show the top n queries
+ 
+mysqldumpslow -s t -t 5  /var/log/mysql/mysql-slow.log
+mysqldumpslow  /var/log/mysql/mysql-slow.log 
+
+mysqldumpslow -a -s t -t 5 /var/log/mysql/mysql-slow.log
+```
+
+![image-20220224141224208](C:\Users\ASUS\AppData\Roaming\Typora\typora-user-images\image-20220224141224208.png)
+
+![image-20220224141359568](C:\Users\ASUS\AppData\Roaming\Typora\typora-user-images\image-20220224141359568.png)
+
+
+
+```sql
+## 查看sql的执行成本
+show profile是mysql提供的可以用来分析当前会话中的sql都做了什么 执行的资源消耗情况的工具,可以用于sql调优的测量,默认情况下处于关闭状态,并保存最近15次的运行结果
+show variables like 'profiling';
+
+set profiling=1; 
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| profiling     | OFF   |
++---------------+-------+
+
+
+mysql lc_konglc@192.168.10.132:konglc_base> show profiles;
++----------+------------+-----------------------------------------------+
+| Query_ID | Duration   | Query                                         |
++----------+------------+-----------------------------------------------+
+| 1        | 0.0001405  | SHOW WARNINGS                                 |
+| 2        | 0.00131125 | show variables like 'profiling'               |
+| 3        | 1.190332   | select * from stu where student_name='fqovkO' |
+| 4        | 0.0003975  | select * from stu limit 10                    |
+| 5        | 1.177566   | select * from stu where student_name='zWkmEm' |
++----------+------------+-----------------------------------------------+
+5 rows in set
+Time: 0.011s
+
+mysql lc_konglc@192.168.10.132:konglc_base> show profile cpu,block io for query 3;
+```
+
+![image-20220224143029877](C:\Users\ASUS\AppData\Roaming\Typora\typora-user-images\image-20220224143029877.png)
+
+**日常开发需注意的结论**
+
+`converting heap to myisam`查询结果 太大 内存不够 数据往磁盘上搬了
+
+`creating tmp table` 创建临时表 先拷贝数据到临时表 用完之后再删除临时表
+
+`copying to temp table on disk` 把内存中临时表复制到磁盘上
+
+`lock` 
+
+如果`show profile`诊断结果中出现以上结果中的任何一条,则sql需要优化
+
+`show profile`命令将被弃用,我们可以从information_schema中的profile数据表进行查看
+
+4.3 分析查询语句 `explain`
+---
+
+### 1 概述
+
+​	定位了查询慢的`SQL`之后,我们就可以使用`explain`或`describe`工具针对性的分析查询语句
+
+能做什么
+
+- 表的读取顺序
+- 数据读取操作的操作类型
+- 哪些索引可以使用
+- 哪些索引实际被使用
+- 表之间的引用
+- 每张表有多少行被优化器查询
+
+版本情况
+
+​	mysql5.6.3以后就可以使用 `explain select update delete`
+
+### 2 基本的语法
+
+```sql
+explain select select_options;
+```
+
+explain输出的各个列的作用如下
+
+| 列名          | 描述                                                   |
+| ------------- | :----------------------------------------------------- |
+| id            | 在一个大的查询语句中每个select关键字都对应一个唯一的id |
+| select_type   | select 关键字对应的那个查询                            |
+| table         | 表名                                                   |
+| partition     | 匹配的分区信息                                         |
+| type          | 针对单表的访问方法                                     |
+| possible_keys | 可能用到的索引                                         |
+| key           | 实际使用的索引                                         |
+| key_len       | 实际使用的索引长度                                     |
+| ref           | 当使用索引列等值查询时,与索引列进行等值匹配的对象信息  |
+| rows          | 预估需要读取的记录条数                                 |
+| filtered      | 某个表经过搜索条件过滤后剩余记录条数的百分比           |
+| extra         | 一些额外的信息                                         |
+
+### 3 数据准备
+
+```sql
+/*EXPLAIN SELECT * FROM student_info;
+SELECT * FROM student_info LIMIT 10;
+DESCRIBE DELETE FROM student_info WHERE id = 2;
+#
+*/
+
+#创建表
+drop table if exists s1;
+create table if not exists s1 (
+    id int auto_increment,
+    key1 varchar(100),
+    key2 int,
+    key3 varchar(100),
+    key_part1 varchar(100),
+    key_part2 varchar(100),
+    key_part3 varchar(100),
+    common_field varchar(100),
+    primary key (id),
+    index idx_key1 (key1),
+    unique index idx_key2 (key2),
+    index idx_key3 (key3),
+    index idx_key_part(key_part1, key_part2, key_part3)
+) engine=innodb charset=utf8 auto_increment=1001;
+
+
+drop table if exists s2;
+create table if not exists s2 (
+    id int auto_increment,
+    key1 varchar(100),
+    key2 int,
+    key3 varchar(100),
+    key_part1 varchar(100),
+    key_part2 varchar(100),
+    key_part3 varchar(100),
+    common_field varchar(100),
+    primary key (id),
+    index idx_key1 (key1),
+    unique index idx_key2 (key2),
+    index idx_key3 (key3),
+    index idx_key_part(key_part1, key_part2, key_part3)
+) engine=innodb charset=utf8 auto_increment=1001;
+
+show create table s1;
+show create table s2;
+
+#创建存储函数：
+delimiter //
+create function rand_string1(n int) 
+	returns varchar(255) #该函数会返回一个字符串
+begin 
+	declare chars_str varchar(100) default 'abcdefghijklmnopqrstuvwxyzABCDEFJHIJKLMNOPQRSTUVWXYZ';
+	declare return_str varchar(255) default '';
+	declare i int default 0;
+	while i < n do
+		set return_str =concat(return_str,substring(chars_str,floor(1+rand()*52),1));
+		set i = i + 1;
+	end while;
+	return return_str;
+end //
+delimiter ;
+
+set global log_bin_trust_function_creators=1; 
+
+#创建存储过程：
+delimiter //
+create procedure insert_s1 (in min_num int (10),in max_num int (10))
+begin
+	declare i int default 0;
+	set autocommit = 0;
+	repeat
+	set i = i + 1;
+	insert into s1 values(
+    (min_num + i),
+    rand_string1(6),
+    (min_num + 30 * i + 5),
+    rand_string1(6),
+    rand_string1(10),
+    rand_string1(5),
+    rand_string1(10),
+    rand_string1(10));
+	until i = max_num
+	end repeat;
+	commit;
+end //
+delimiter ;
+
+
+delimiter //
+create procedure insert_s2 (in min_num int (10),in max_num int (10))
+begin
+	declare i int default 0;
+	set autocommit = 0;
+	repeat
+	set i = i + 1;
+	insert into s2 values(
+        (min_num + i),
+		rand_string1(6),
+		(min_num + 30 * i + 5),
+		rand_string1(6),
+		rand_string1(10),
+		rand_string1(5),
+		rand_string1(10),
+		rand_string1(10));
+	until i = max_num
+	end repeat;
+	commit;
+end //
+delimiter ;
+
+#调用存储过程
+call insert_s1(10001,10000);
+
+call insert_s2(10001,10000);
+
+select count(*) from s1;
+
+select count(*) from s2;
+```
+
+### 4  explain的各个关键字
+
+```mysql
+
+#1. table：表名
+#查询的每一行记录都对应着一个单表
+explain select * from s1;
+
+#s1:驱动表  s2:被驱动表
+explain select * from s1 inner join s2;
+
+#2. id：在一个大的查询语句中每个SELECT关键字都对应一个唯一的id
+ select * from s1 where key1 = 'a';
+
+ select * from s1 inner join s2
+ on s1.key1 = s2.key1
+ where s1.common_field = 'a';
+
+
+ select * from s1 
+ where key1 in (select key3 from s2);
+
+ select * from s1 union select * from s2;
+ explain select * from s1 where key1 = 'a';
+ 
+ 
+ explain select * from s1 inner join s2;
+ 
+ 
+ explain select * from s1 where key1 in (select key1 from s2) or key3 = 'a';
+ 
+ ######查询优化器可能对涉及子查询的查询语句进行重写,转变为多表查询的操作########
+ explain select * from s1 where key1 in (select key2 from s2 where common_field = 'a');
+ 
+ #Union去重
+ explain select * from s1 union select * from s2;
+ 
+/**
+	小结
+		如果id相同,可以认为是一组 从上往下执行
+		在所有组中 id值越大 优先级越高 越先执行
+		关注点 : id 号每个号码表示一趟独立的查询 一个sql查询趟数越少越好
+
+*/ 
+ 
+ #3. select_type：SELECT关键字对应的那个查询的类型,确定小查询在整个大查询中扮演了一个什么角色
+/*	 一条大的查询语句里面可以包含若干个select关键字,每个select关键字代表着一个小的查询,而每个select
+	关键字的from子句中都可以包含若干张表(这些表用来做连接查询) 每一张表对应着执行计划输出中的1条
+	记录,对于同一个select关键字中的表来说,他们的id是相同的
+	mysql为每一个select关键字代表的小查询都定义了一个称之为select_type的属性,意思是只要我们知道了某
+	个小查询的select_type属性,就知道了这个小查询在整个大查询中扮演着什么角色
+	select_type的取值 : 
+			SIMPLE
+			PRIMARY
+			UNION
+			SUBQUERY
+			DEPENDENT SUBQUERY
+*/
+ # 查询语句中不包含`UNION`或者子查询的查询都算作是`SIMPLE`类型
+ explain select * from s1;
+ 
+ #连接查询也算是`SIMPLE`类型
+ explain select * from s1 inner join s2;
+ 
+
+ #对于包含`UNION`或者`UNION ALL`或者子查询的大查询来说，它是由几个小查询组成的，其中最左边的那个
+ #查询的`select_type`值就是`PRIMARY`
+ 
+ 
+ #对于包含`UNION`或者`UNION ALL`的大查询来说，它是由几个小查询组成的，其中除了最左边的那个小查询
+ #以外，其余的小查询的`select_type`值就是`UNION`
+ 
+ #`MySQL`选择使用临时表来完成`UNION`查询的去重工作，针对该临时表的查询的`select_type`就是
+ #`UNION RESULT`
+ explain select * from s1 union select * from s2;
+ 
+ explain select * from s1 union all select * from s2;
+ 
+ #子查询：
+ #如果包含子查询的查询语句不能够转为对应的`semi-join`的形式，并且该子查询是不相关子查询。
+ #该子查询的第一个`SELECT`关键字代表的那个查询的`select_type`就是`SUBQUERY`
+ explain select * from s1 where key1 in (select key1 from s2) or key3 = 'a';
+ 
+ 
+ #如果包含子查询的查询语句不能够转为对应的`semi-join`的形式，并且该子查询是相关子查询，
+ #则该子查询的第一个`SELECT`关键字代表的那个查询的`select_type`就是`DEPENDENT SUBQUERY`
+ explain select * from s1 
+ where key1 in (select key1 from s2 where s1.key2 = s2.key2) or key3 = 'a';
+ #注意的是，select_type为`DEPENDENT SUBQUERY`的查询可能会被执行多次。
+ 
+ 
+ #在包含`UNION`或者`UNION ALL`的大查询中，如果各个小查询都依赖于外层查询的话，那除了
+ #最左边的那个小查询之外，其余的小查询的`select_type`的值就是`DEPENDENT UNION`。
+ explain select * from s1 
+ where key1 in (select key1 from s2 where key1 = 'a' union select key1 from s1 where key1 = 'b');
+ 
+ 
+ #对于包含`派生表`的查询，该派生表对应的子查询的`select_type`就是`DERIVED`
+ explain select * 
+ from (select key1, count(*) as c from s1 group by key1) as derived_s1 where c > 1;
+ 
+ 
+ #当查询优化器在执行包含子查询的语句时,选择将子查询物化之后与外层查询进行连接查询时，
+ #该子查询对应的`select_type`属性就是`MATERIALIZED`
+ explain select * from s1 where key1 in (select key1 from s2); #子查询被转为了物化表
+ 
+ 
+ 
+ # 4. partition(略)：匹配的分区信息
+ 
+ 
+ # 5. type：针对单表的访问方法
+ /*
+	执行计划的一条记录就代表着mysql对某个表的执行查询计划的访问方法 又称访问类型 
+	其中type列就表明这个访问方法是啥,是一个较为重要的指标 比如看到type列值的是ref,表
+	明mysql即将使用ref方法执行对s1表的查询
+	
+	完整的访问方法如下:
+		system	const	eq_ref	ref	fulltext	ref_or_null	index_merge	
+		unique_subquery	index_subquery	range	index 	all
+	详细解释
+		
+ */
+ #当表中`只有一条记录`并且该表使用的存储引擎的统计数据是精确的，比如MyISAM、Memory，
+ #那么对该表的访问方法就是`system`。
+ create table t(i int) engine=myisam;
+ insert into t values(1);
+ 
+ explain select * from t;
+ 
+ #换成InnoDB
+ create table tt(i int) engine=innodb;
+ insert into tt values(1);
+ explain select * from tt;
+ 
+ 
+ #当我们根据主键或者唯一二级索引列与常数进行等值匹配时，对单表的访问方法就是`const`
+ explain select * from s1 where id = 10005;
+ 
+explain select * from s1 where key2 = 10066;
+explain select  * from s1 where key3='TJBOql' -- type ref
+explain select  * from s1 where key3=100 -- type all 隐式的使用到了函数 就使用不上索引
+
+ #在连接查询时，如果被驱动表是通过主键或者唯一二级索引列等值匹配的方式进行访问的
+ #（如果该主键或者唯一二级索引是联合索引的话，所有的索引列都必须进行等值比较），则
+ #对该被驱动表的访问方法就是`eq_ref`
+ explain select * from s1 inner join s2 on s1.id = s2.id;
+  
+ #当通过普通的二级索引列与常量进行等值匹配时来查询某个表，那么对该表的访问方法就可能是`ref`
+ explain select * from s1 where key1 = 'a';
+ show index from s1;
+ 
+ 
+ #当对普通二级索引进行等值匹配查询，该索引列的值也可以是`NULL`值时，那么对该表的访问方法
+ #就可能是`ref_or_null`
+ explain select * from s1 where key1 = 'a' or key1 is null;
+ 
+ #单表访问方法时在某些场景下可以使用`Intersection`、`Union`、
+ #`Sort-Union`这三种索引合并的方式来执行查询
+ explain select * from s1 where key1 = 'a' or key3 = 'a';
+ 
+ 
+ #`unique_subquery`是针对在一些包含`IN`子查询的查询语句中，如果查询优化器决定将`IN`子查询
+ #转换为`EXISTS`子查询，而且子查询可以使用到主键进行等值匹配的话，那么该子查询执行计划的`type`
+ #列的值就是`unique_subquery`
+ explain select * from s1 
+ where key2 in (select id from s2 where s1.key1 = s2.key1) or key3 = 'a';
+ 
+ 
+ #如果使用索引获取某些`范围区间`的记录，那么就可能使用到`range`访问方法
+ explain select * from s1 where key1 in ('a', 'b', 'c');
+ 
+ #同上
+ explain select * from s1 where key1 > 'a' and key1 < 'b';
+ 
+ #当我们可以使用索引覆盖，但需要扫描全部的索引记录时，该表的访问方法就是`index`
+ explain select key_part2 from s1 where key_part3 = 'a';
+ 
+ 
+ #最熟悉的全表扫描
+ explain select * from s1;
+ /*
+	小结 :
+		结果值从好到坏依次是 system > const  > eq_ref > ref > fulltext > ref_or_null > index_merge > unique_subquery > 
+			index_subquery > range > index > all
+			sql性能优化的目标 至少要达到range级别 要求是ref级别 最好是const
+ */
+ 
+ #6. possible_keys和key：可能用到的索引 和  实际上使用的索引
+ 
+ explain select * from s1 where key1 > 'z' and key3 = 'a';-- key3 列使用到了索引
+ explain select * from s1 where key1 > 'z' or key3 = 'a'; -- key3 和key1列使用到了索引
+
+
+ 
+#7.  key_len：实际使用到的索引长度(即：字节数)
+# 帮你检查`是否充分的利用上了索引`，`值越大越好`,主要针对于联合索引，有一定的参考意义。
+ explain select * from s1 where id = 10005;
+
+ explain select * from s1 where key2 = 10126;
+
+ explain select * from s1 where key1 = 'a';
+
+
+## 下面的才有参考意义
+ explain select * from s1 where key_part1 = 'a';
+
+ explain select * from s1 where key_part1 = 'a' and key_part2 = 'b';
+
+ explain select * from s1 where key_part1 = 'a' and key_part2 = 'b' and key_part3 = 'c';
+ 
+ ## 没有使用到索引
+ explain select * from s1 where key_part3 = 'a';
+ 
+#练习：
+#varchar(10)变长字段且允许NULL  = 10 * ( character set：utf8=3,gbk=2,latin1=1)+1(NULL)+2(变长字段)
+
+#varchar(10)变长字段且不允许NULL = 10 * ( character set：utf8=3,gbk=2,latin1=1)+2(变长字段)
+
+#char(10)固定字段且允许NULL    = 10 * ( character set：utf8=3,gbk=2,latin1=1)+1(NULL)
+
+#char(10)固定字段且不允许NULL  = 10 * ( character set：utf8=3,gbk=2,latin1=1)
+ 
+ 
+ 
+ # 8. ref：当使用索引列等值查询时，与索引列进行等值匹配的对象信息。
+ #比如只是一个常数或者是某个列。
+ 
+ explain select * from s1 where key1 = 'a';
+ 
+ 
+ explain select * from s1 inner join s2 on s1.id = s2.id;
+ 
+ explain select * from s1 inner join s2 on s2.key1 = upper(s1.key1);
+ 
+ 
+ # 9. rows：预估的需要读取的记录条数
+ # `值越小越好`
+ explain select * from s1 where key1 > 'z';
+ 
+ # 10. filtered: 某个表经过搜索条件过滤后剩余记录条数的百分比
+ 
+ #如果使用的是索引执行的单表扫描，那么计算时需要估计出满足除使用
+ #到对应索引的搜索条件外的其他搜索条件的记录有多少条。
+ explain select * from s1 where key1 > 'z' and common_field = 'a'; -- 预估只有10%的数据满足要求
+ explain select * from s1 where key1 > 'z' ; -- 预估100%的数据满足要求
+ 
+ #对于单表查询来说，这个filtered列的值没什么意义，我们`更关注在连接查询
+ #中驱动表对应的执行计划记录的filtered值`，它决定了被驱动表要执行的次数(即：rows * filtered)
+ explain select * from s1 inner join s2 on s1.key1 = s2.key1 where s1.common_field = 'a';
+ select count(*) from s1 inner join s2 on s1.key1 = s2.key1 where s1.common_field = 'a';
+ 
+ 
+ #11. Extra:一些额外的信息
+ #更准确的理解MySQL到底将如何执行给定的查询语句
+ 
+ 
+ #当查询语句的没有`FROM`子句时将会提示该额外信息
+ explain select 1;
+ 
+ 
+ #查询语句的`WHERE`子句永远为`FALSE`时将会提示该额外信息
+ explain select * from s1 where 1 != 1;
+ 
+ 
+ #当我们使用全表扫描来执行对某个表的查询，并且该语句的`WHERE`
+ #子句中有针对该表的搜索条件时，在`Extra`列中会提示上述额外信息。
+ explain select * from s1 where common_field = 'a';
+ 
+ 
+ #当使用索引访问来执行对某个表的查询，并且该语句的`WHERE`子句中
+ #有除了该索引包含的列之外的其他搜索条件时，在`Extra`列中也会提示上述额外信息。
+ explain select * from s1 where key1 = 'a' and common_field = 'a';
+ 
+ #当查询列表处有`MIN`或者`MAX`聚合函数，但是并没有符合`WHERE`子句中
+ #的搜索条件的记录时，将会提示该额外信息
+ explain select min(key1) from s1 where key1 = 'nUKQaE'; #nUKQaE 是 s1表中key1字段真实存在的数据
+ 
+ select * from s1 limit 10;
+ 
+ #当我们的查询列表以及搜索条件中只包含属于某个索引的列，也就是在可以
+ #使用覆盖索引的情况下，在`Extra`列将会提示该额外信息。比方说下边这个查询中只
+ #需要用到`idx_key1`而不需要回表操作：
+ explain select key1 from s1 where key1 = 'a';
+ explain select * from s1 where key1 = 'a'; -- 会进行回表操作
+ 
+ #有些搜索条件中虽然出现了索引列，但却不能使用到索引
+ #看课件理解索引条件下推
+ explain select * from s1 where key1 > 'z' and key1 like '%a';
+ 
+ #在连接查询执行过程中，当被驱动表不能有效的利用索引加快访问速度，MySQL一般会为
+ #其分配一块名叫`join buffer`的内存块来加快查询速度，也就是我们所讲的`基于块的嵌套循环算法`
+ #见课件说明
+ explain select * from s1 inner join s2 on s1.common_field = s2.common_field;
+ 
+ #当我们使用左（外）连接时，如果`WHERE`子句中包含要求被驱动表的某个列等于`NULL`值的搜索条件，
+ #而且那个列又是不允许存储`NULL`值的，那么在该表的执行计划的Extra列就会提示`Not exists`额外信息
+ explain select * from s1 left join s2 on s1.key1 = s2.key1 where s2.id is null;
+ 
+ #如果执行计划的`Extra`列出现了`Using intersect(...)`提示，说明准备使用`Intersect`索引
+ #合并的方式执行查询，括号中的`...`表示需要进行索引合并的索引名称；
+ #如果出现了`Using union(...)`提示，说明准备使用`Union`索引合并的方式执行查询；
+ #出现了`Using sort_union(...)`提示，说明准备使用`Sort-Union`索引合并的方式执行查询。
+ explain select * from s1 where key1 = 'a' or key3 = 'a';
+ 
+ 
+ #当我们的`LIMIT`子句的参数为`0`时，表示压根儿不打算从表中读出任何记录，将会提示该额外信息
+ explain select * from s1 limit 0;
+ 
+ 
+ #有一些情况下对结果集中的记录进行排序是可以使用到索引的。
+ #比如：
+ explain select * from s1 where id > 1000 order by key1 limit 10;
+ 
+ select * from s1 where id > 1000 order by key1 limit 10;
+ #很多情况下排序操作无法使用到索引，只能在内存中（记录较少的时候）或者磁盘中（记录较多的时候）
+ #进行排序，MySQL把这种在内存中或者磁盘上进行排序的方式统称为文件排序（英文名：`filesort`）。
+ 
+ #如果某个查询需要使用文件排序的方式执行查询，就会在执行计划的`Extra`列中显示`Using filesort`提示
+ explain select * from s1 order by common_field limit 10;
+ 
+ 
+ #在许多查询的执行过程中，MySQL可能会借助临时表来完成一些功能，比如去重、排序之类的，比如我们
+ #在执行许多包含`DISTINCT`、`GROUP BY`、`UNION`等子句的查询过程中，如果不能有效利用索引来完成
+ #查询，MySQL很有可能寻求通过建立内部的临时表来执行查询。如果查询中使用到了内部的临时表，在执行
+ #计划的`Extra`列将会显示`Using temporary`提示
+ explain select distinct common_field from s1;
+ 
+ #EXPLAIN SELECT DISTINCT key1 FROM s1;
+ 
+ #同上。
+ explain select common_field, count(*) as amount from s1 group by common_field;
+ 
+ #执行计划中出现`Using temporary`并不是一个好的征兆，因为建立与维护临时表要付出很大成本的，所以
+ #我们`最好能使用索引来替代掉使用临时表`。比如：扫描指定的索引idx_key1即可
+ explain select key1, count(*) as amount from s1 group by key1;
+ 
+#json格式的explain
+explain format=json select * from s1 inner join s2 on s1.key1 = s2.key2 
+where s1.common_field = 'a';
+/*
+	explain不考虑各种cache
+	explain不显示mysql在执行查询时所作的优化操作
+	explain不会告诉你关于触发器,存储过程的信息或用户自定义的函数对查询的影响情况
+	explain部分统计信息是估算的,并非精确值
+*/
+```
+
+### 5 explain的进一步使用
+
+#### 	5.1 explain的四种输出格式
+
+- 传统格式
+- json格式
+- tree格式
+- 可视化输出
+
+```mysql
+## json格式
+explain format=json select/update/delete
+```
+
+第 5 章 索引优化和查询优化
+===
+
+都有哪些维度可以进行数据库调优 简言之:
+
+- 索引失效 没有充分利用到索引-- 建立索引
+- 关联查询太多 `join` (设计缺陷 或不得已的需求) -- **SQL**优化
+- 服务器调优及各个参数设置(缓冲 线程数) --调整 my.cnf
+- 数据过多 -- 分库分表
+
+关于数据库调优的知识点非常分散,不同的 DBMS,不同的公司,不同的职位,不同的项目遇到的问题都不尽相同
+
+虽然SQL优化的技术很多,但是大方向上可以分成 **物理查询优化**和 **逻辑查询优化**两种
+
+物理查询优化是通过 **索引**和 **表连接方式**等技术来进行优化,这里重点需要掌握索引的使用
+
+逻辑查询优化就是通过 **SQL**等价变换提升查询效率,直白一点说就是,换一种查询写法执行效率可能更高
+
+5.1 数据准备
+---
+
+```mysql
+#1. 数据准备
+#建表
+drop table if exists class;
+create table if not exists`class` (
+ `id` int(11) not null auto_increment,
+ `className` varchar(30) default null,
+ `address` varchar(40) default null,
+ `monitor` int null ,
+ primary key (`id`)
+) engine=innodb auto_increment=1001 default charset=utf8;
+ 
+drop table if exists student;
+create table if not exists `student` (
+ `id` int(11) not null auto_increment,
+ `stuno` int not null ,
+ `name` varchar(20) default null,
+ `age` int(3) default null,
+ `classId` int(11) default null,
+ primary key (`id`)
+ #CONSTRAINT `fk_class_id` FOREIGN KEY (`classId`) REFERENCES `t_class` (`id`)
+) engine=innodb auto_increment=1001 default charset=utf8;
+
+set global log_bin_trust_function_creators=1; 
+
+ #随机产生字符串
+delimiter //
+create function rand_string(n int) returns varchar(255)
+begin    
+declare chars_str varchar(100) default 'abcdefghijklmnopqrstuvwxyzABCDEFJHIJKLMNOPQRSTUVWXYZ';
+declare return_str varchar(255) default '';
+declare i int default 0;
+while i < n do  
+set return_str =concat(return_str,substring(chars_str,floor(1+rand()*52),1));  
+set i = i + 1;
+end while;
+return return_str;
+end //
+delimiter ;
+
+#用于随机产生多少到多少的编号
+delimiter //
+create function  rand_num (from_num int ,to_num int) returns int(11)
+begin   
+declare i int default 0;  
+set i = floor(from_num +rand()*(to_num - from_num+1))   ;
+return i;  
+end //
+delimiter ;
+
+#创建往stu表中插入数据的存储过程
+delimiter //
+create procedure  insert_stu(  start int ,  max_num int )
+begin  
+declare i int default 0;   
+ set autocommit = 0;    #设置手动提交事务
+ repeat  #循环
+ set i = i + 1;  #赋值
+ insert into student (stuno, name ,age ,classId ) values ((start+i),rand_string(6),rand_num(1,50),rand_num(1,1000));  
+ until i = max_num  
+ end repeat;  
+ commit;  #提交事务
+end //
+delimiter ;
+
+
+#执行存储过程，往class表添加随机数据
+delimiter //
+create procedure `insert_class`(  max_num int )
+begin  
+declare i int default 0;   
+ set autocommit = 0;    
+ repeat  
+ set i = i + 1;  
+ insert into class ( classname,address,monitor ) values (rand_string(8),rand_string(10),rand_num(1,100000));  
+ until i = max_num  
+ end repeat;  
+ commit; 
+end //
+delimiter ;
+
+
+#执行存储过程，往class表添加1万条数据  
+call insert_class(10000);
+
+#执行存储过程，往stu表添加50万条数据  
+call insert_stu(100000,500000);
+
+select count(*) from class;
+
+select count(*) from student;
+
+
+
+delimiter //
+create  procedure `proc_drop_index`(dbname varchar(200),tablename varchar(200))
+begin
+       declare done int default 0;
+       declare ct int default 0;
+       declare _index varchar(200) default '';
+       declare _cur cursor for  select   index_name   from information_schema.STATISTICS   where table_schema=dbname and table_name=tablename and seq_in_index=1 and    index_name <>'PRIMARY'  ;
+#每个游标必须使用不同的declare continue handler for not found set done=1来控制游标的结束
+       declare  continue handler for not found set done=2 ;      
+#若没有数据返回,程序继续,并将变量done设为2
+        open _cur;
+        fetch _cur into _index;
+        while  _index<>'' do 
+               set @str = concat("drop index " , _index , " on " , tablename ); 
+               prepare sql_str from @str ;
+               execute  sql_str;
+               deallocate prepare sql_str;
+               set _index=''; 
+               fetch _cur into _index; 
+        end while;
+   close _cur;
+end //
+delimiter ;
+```
+
+5.2 索引失效的案例
+---
+
+mysql中提高性能的一个最有效的方式是对数据 **设计合理的索引** 索引提供了高效访问数据的方法,并且加快查询速度,因此索引对查询速度有这至关重要的影响
+
+- 使用索引可以快速定位表中的某条记录,从而提高数据库的查询速度,提高数据库的性能
+
+- 如果查询没有使用索引,查询语句就会扫描表中的所有记录 在数据量大的情况下,这样查询速度会很慢
+
+  大多数情况下都默认采用B+树构建索引 只是空间列类型的索引使用R-树 并且 MEMORY表还支持hash索引
+
+  其实 用不用索引 最终都是查询优化器说了算,优化器是基于开销的优化器
+
+  基于开销(`CostBaseOptimizer`),它不是基于规则(`Rule-BasedOptimizer`),也不是基于语义.怎样开销小就怎样来
+
+  另外 `SQL`语句是否使用索引,跟**数据库版本 数据量 数据选择度**都有关系
+
+```mysql
+# 06-索引优化与查询优化
+#2. 索引失效案例
+#1) 全值匹配我最爱
+explain select sql_no_cache * from student where age=30; -- 无索引 全表扫描
+explain select sql_no_cache * from student where age=30 and classId=4;
+explain select sql_no_cache * from student where age=30 and classId=4 and name = 'abcd';
+select sql_no_cache * from student where age=30 and classId=4 and name = 'abcd';
+
+select sql_no_cache * from student where age=30 and classId=4 and name = 'abcd';
+select sql_no_cache * from student where age=30;
+
+create index idx_age on student(age);
+
+create index idx_age_classid on student(age,classId);
+
+create index idx_age_classid_name on student(age,classId,name);
+
+#2) 最佳左前缀法则
+## 在mysql建立联合索引时遵守最佳最前缀匹配原则,即最左的优先,在检索数据时 从数据的最左边开始匹配
+explain select sql_no_cache * from student where student.age=30 and student.name = 'abcd' ;
+
+## 没有使用到索引
+explain select sql_no_cache * from student where student.classid=1 and student.name = 'abcd';
+ 
+ ## 使用到了索引
+explain select sql_no_cache * from student where classid=4 and student.age=30 and student.name = 'abcd'; 
+
+drop index idx_age on student;
+drop index idx_age_classid on student;
+
+## 只使用到了age
+explain select sql_no_cache * from student where student.age=30 and student.name = 'abcd'; 
+--  MySQL可以为多个字段创建索引,一个索引可以包括16个字段 对于多列索引,过滤条件要使用索引必须按照索引建立时的顺序
+-- 依次满足,一旦跳过某个字段,索引后面的字段都无法被使用 如果查询条件中没有使用这些字段中的第一个字段,多列(联合)索
+-- 引不会被使用 索引文件具有B-Tree最左前缀匹配特性,如果左边的值未确定,那么无法使用此索引
+
+#3) 主键插入顺序
+/*
+	对于一个使用InnoDB存储引擎的表来说,在我们没有显式的创建索引时,表中的数据实际上都是存储在 聚簇索引的叶子节点上
+	而记录又是存储在数据页中的,数据页和记录页又是按照记录主键值从小到大的顺序进行排序,所以如果我们插入的记录的主键
+	是依次增大的话,那么我们插满一个数据页就继续往下一个数据页继续插 而如果插入的主键值忽大忽小的话 就比较麻烦了,假设
+	某个数据页存储的记录已经满了,如果在往数据页里面插入数据,就需要把当前页面分裂成两个页面,把本页中的一些记录移动到
+	新创建的页中 页面分离和记录移位意味着什么?意味着性能损耗 所以我们想要避免这样无谓的性能损耗,最好让插入的主键值
+	依次递增,这样就不会发生性能损耗了 所以我们建议让主键具有auto_increment,让存储引擎为表生产主键,而不是我们手工插入
+*/
+
+#4)计算、函数、类型转换(自动或手动)导致索引失效
+
+#此语句比下一条要好！（能够使用上索引）
+explain select sql_no_cache * from student where student.name like 'abc_%';
+
+## 没有使用到索引
+explain select sql_no_cache * from student where left(student.name,3) = 'abc'; 
+
+create index idx_name on student(name);
+
+
+#
+
+create index idx_sno on student(stuno);
+## 未使用到索引
+explain select sql_no_cache id, stuno, name from student where stuno+1 = 900001;
+## 使用到了索引
+explain select sql_no_cache id, stuno, name from student where stuno = 900000;
+
+
+explain select id, stuno, name from student where substring(name, 1,3)='abc';
+
+#5)类型转换导致索引失效
+show index from student;
+## 没有使用到索引  name是varchar类型
+explain select sql_no_cache * from student where name = 123; 
+
+## 使用到了索引
+explain select sql_no_cache * from student where name = '123'; 
+
+
+#6)范围条件右边的列索引失效
+## 创建索引时务必把涉及到范围的字段写在最后
+show index from student;
+## 删除所有的索引
+call proc_drop_index('chaoDb','student');
+
+create index idx_age_classId_name on student(age,classId,name);
+
+## 索引的长度为10个字节 name没有用上 age占5个字节 class_id占5个字节
+explain select sql_no_cache * from student where student.age=30 and student.classId>20 and student.name = 'abc' ; 
+
+explain select sql_no_cache * from student where student.age=30 and student.name = 'abc' and student.classId>20; 
+
+create index idx_age_name_cid on student(age,name,classId);
+
+#7)不等于(!= 或者<>)索引失效
+create index idx_name on student(name);
+
+explain select sql_no_cache * from student where student.name <> 'abc' ;
+
+explain select sql_no_cache * from student where student.name != 'abc' ;
+
+
+#8）is null可以使用索引，is not null无法使用索引
+explain select sql_no_cache * from student where age is null; 
+
+explain select sql_no_cache * from student where age is not null; 
+/*
+	结论 : 最好在设计数据库表的时候就将字段设置为not null约束,比如可以将int类型的字段 默认设置为0
+	将字符类型的默认值设置为空字符串 ('')
+	在查询时使用not like也无法使用索引 导致全表扫描
+*/
+
+#9)like以通配符%开头索引失效
+## 页面搜索严禁全模糊或者左模糊 如果需要请走搜索引擎来解决
+## 
+explain select sql_no_cache * from student where name like 'ab%'; 
+
+explain select sql_no_cache * from student where name like '%ab%';
+
+#10)OR 前后存在非索引的列，索引失效
+show index from student;
+
+call proc_drop_index('chaoDb','student');
+
+create index idx_age on student(age);
+
+explain select sql_no_cache * from student where age = 10 or classid = 100;
+
+create index idx_cid on student(classid);
+
+# 11) 数据库和表的字符集统一使用utf8mb4
+/*
+	一般性建议
+		1 对于单列索引,尽量选择针对当前query过滤性更好的索引
+		2 在选择组合索引的时候,当前query中过滤性最好的字段在索引字段顺序中 位置越靠前越好
+		3 在选择组合索引的时候,尽量选择包含当前query中的where子句中更多字段索引
+		4 在选择组合索引的时候,如果某个字段可能出现范围查询时,尽量把这个字段放在索引次序的最后面
+		总之 在咱们书写sql语句时,尽量避免造成索引失效的情况
+*/
+```
+
+5.3 关联查询优化
+---
+
+```mysql
+-- 数据准备
+#3. 关联查询优化
+# 情况1：左外连接
+#分类
+create table if not exists `type_` (
+`id` int(10) unsigned not null auto_increment,
+`card` int(10) unsigned not null,
+primary key (`id`)
+);
+
+#图书
+create table if not exists `book` (
+`bookid` int(10) unsigned not null auto_increment,
+`card` int(10) unsigned not null,
+primary key (`bookid`)
+);
+
+select * from type_;
+#向分类表中添加20条记录
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+insert into type_(card) values(floor(1 + (rand() * 20)));
+commit;
+#向图书表中添加20条记录
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+insert into book(card) values(floor(1 + (rand() * 20)));
+
+explain select sql_no_cache * from `type_` left join book on type_.card = book.card;
+
+#添加索引
+create index y on book(card);
+-- type_ 
+explain select sql_no_cache * from `type_` left join book on type_.card = book.card;
+
+create index x on `type_`(card);
+
+explain select sql_no_cache * from `type_` left join book on type_.card = book.card;
+
+drop index y on book;
+
+explain select sql_no_cache * from `type_` left join book on type_.card = book.card;
+
+# 情况2：内连接
+drop index x on `type_`;
+show index from type_;
+show index from book;
+
+explain select sql_no_cache * from `type_` inner join book on type_.card = book.card;
+select sql_no_cache * from `type_` inner join book on type_.card = book.card;
+#添加索引
+create index y on book(card);
+
+explain select sql_no_cache * from `type_` inner join book on type_.card = book.card;
+
+create index x on `type_`(card);
+
+#结论：对于内连接来说，查询优化器可以决定谁作为驱动表，谁作为被驱动表出现的
+explain select sql_no_cache * from `type_` inner join book on type_.card = book.card;
+
+#删除索引
+drop index y on book;
+#结论：对于内连接来讲，如果表的连接条件中只能有一个字段有索引，则有索引的字段所在的表会被作为被驱动表出现。
+explain select sql_no_cache * from `type_` inner join book on type_.card = book.card;
+
+create index y on book(card);
+explain select sql_no_cache * from `type_` inner join book on type_.card = book.card;
+
+#向type_表中添加数据（20条数据）
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+insert into `type_`(card) values(floor(1 + (rand() * 20)));
+
+#结论：对于内连接来说，在两个表的连接条件都存在索引的情况下，会选择小表作为驱动表。“小表驱动大表”
+explain select sql_no_cache * from `type_` inner join book on type_.card = book.card;
+```
+
+5.4 join的原理
+---
+
+​	join 方式连接多个表,本质就是各个表之间数据的循环匹配 如果关联表的数据量很大,则关联的执行时间会非常长
+
+#### 	5.4.1 **驱动表和被驱动表**
+
+​	驱动表就是主表,被驱动表就是从表,非驱动表 
+
+​	两个**join**的表,有索引的表作为被驱动表
+
+```mysql
+-- 对于内连接来说
+select * from A join B
+A一定是驱动表 不一定 优化器会根据你的查询做优化 决定先查询哪张表 先查询的那张表就是驱动表 反之就是被驱动表 通过explain关键字可以查询
+
+-- 对于外连接来说
+select * from A left join B on
+通常 大家会认为A就是驱动表 B就是被驱动表 但也未必 测试如下
+```
+
+#### 5.4.2 Simple Nested-Loop Join(简单循环嵌套连接)(SNLJ)
+
+算法相当简单,从A表中取出一条数据1,遍历B表,将匹配到的数据放到result,以此类推,驱动表A中的每一条记录与被驱动表B的记录进行判断
+
+可以看到  这种方式的效率是非常低的 上述表A 100条数据 表B1000条数据,则A*B=10万次
+
+#### 5.4.3 Index Nested-Loop-Join(索引嵌套循环连接)
+
+`index Nested-Loop-Join`其优化的思路主要是为了 **减少内层表匹配的次数** 所以要求被驱动表上 **有索引** 才行 通过外层匹配条件直接与内层表索引进行匹配 避免和内存表的每条记录进行比较,这样极大的减少了对内层表的匹配次数
+
+驱动表中每条记录通过被驱动表的索引进行访问,因为索引查询的成本是比较固定的 因此mysql的优化器都倾向于使用记录数少的表作为驱动表(外表)
+
+| 开销统计         | 简单循环嵌套连接 | 索引循环嵌套连接      |
+| ---------------- | ---------------- | --------------------- |
+| 外表扫描的次数   | 1                | 1                     |
+| 内表扫描的次数   | A                | 0                     |
+| 读取记录数       | A +B*A           | A+B(match)            |
+| join比较次数     | B*A              | A*index(Height)       |
+| 回表读取记录次数 | 0                | B(match)(if possible) |
+
+如果被驱动表加索引 效率是非常高的,但是如果索引不是主键索引,还会进行一次回表操作 相比被驱动表的索引是主键索引,效率会更高
+
+#### 5.4.4 Block Nested-Loop-Join (块循环连接)
+
+如果存在索引,那么使用idex的方式进行join,如果join的列没有索引 被驱动表要扫描的次数太多了.每次访问被驱动表 其表中的记录都会被加载到内存 然后再从驱动表中去一条与其匹配 匹配结束后清除内存,然后再从驱动表中加载一条记录,然后把被驱动表中的数据加载到内存匹配 这样周而复始,大大增加了IO的次数 为了减少被驱动表IO的次数 就出现了 **Block Nested Loop Join**的方式
+
+不再是逐条获取驱动表中的数据,而是一块一块的获取 引入了 `join buffer` 缓冲区,将驱动表相关的部分数据列(大小受join buffer的限制 )缓冲到 `join buffer`中,然后全表扫描被驱动表,将驱动表的每一条记录一次性和 `join buffer`中的所有驱动表的记录进行匹配 (内存中操作) 将简单循环嵌套中的多次比较合并成一次,降低了被驱动表的访问频率
+
+**相关参数**
+
+```mysql
+-- block_nested_loop=on 默认是开启的
+show variables like '%optimizer_switch%';
+-- 驱动表能不能一次加载完 要看join buffer能不能存储所有的数据 默认情况下 join_buffer_size=256k
+-- join_buffer_size的最大值在32位系统中可申请4G 而在64位操作系统下可以申请大于4G的join buffer空间
+-- (64位的Windows系统除外 其最大值会被截断为4G 并发出告警)
+show variables like '%join_buffer%';
+show variables like '%block_nested_loop%' 
+```
+
+#### 5.4.5 join 小结
+
+##### 1 **整体效率** **INLJ > BNLJ > SNLJ**
+
+##### 2 永远用小结果集驱动大结果集(其本质就是减少外层循环的数量)(大小的度量单位指的是 表行数 * 每行大小)
+
+```mysql
+## straight_join 明确指定 t1作为驱动表 t2作为被驱动表
+select t1.b,t2.* from t1 straight_join t2 on (t1.b = t2.b) where t2.id < 100;
+## straight_join 明确指定 t2作为驱动表 t1作为被驱动表
+select t1.b,t2.* from t2 straight_join t1 on (t1.b = t2.b) where t2.id < 100;
+```
+
+3 为被驱动表匹配的条件增加索引(减少内层表循环匹配的次数) 
+
+4 增大 join buffer size 大小(一次性缓存的数据越多 那么内层表扫描次数就越少)
+
+5 减少驱动表不必要的字段(字段越少 join buffer缓存的数据越多)
+
+
+
+5.8 优先考虑覆盖索引
+---
+
+​	**什么是覆盖索引**
+
+​		**理解方式1 : ** 索引是高效找到一个行的方法,但一般数据库也能使用索引找到一列数据,因此它不必读取整个行,毕竟索引的叶子节点存储了他们索引的数据,当能通过索引就可以得到想要的数据,那就需要读取整个行了 **一个索引包含了满足查询结果的数据就叫做覆盖索引**
+
+
+
+​		**理解方式2** 非聚簇复合索引的一种形式 它包括在查询里的 **select join**和 **where**子用到的所有列 即索引的字段正好是 **覆盖查询条件中所涉及的字段**
+
+简单的说 : **覆盖索引就是** 索引 + 主键包含 `select 到 from`之间查询的列
+
+mysql查看锁
+===
+
+```sql
+## 查询是否锁表
+show open tables where In_use > 0;
+
+## 查看MySQL所有进程 
+show processlist; 
+show full processlist;
+ 
+## 杀掉指定mysql连接的进程号
+kill 31; 
+
+## 查看服务器状态
+show status like '%lock%';
+
+## 查看超时时间：
+show variables like '%timeout%';
+```
+
+mysql正则表达式
+---
+
+```sql
+-- 匹配以a开头
+select 'abc' REGEXP '^a' as word;-- 1
+-- 匹配以c结尾
+SELECT 'abc' REGEXP 'c$'; -- 1
+SELECT 'abc' REGEXP 'A$'; -- 0
+
+-- .匹配任意单个字符
+SELECT 'abc' regexp '.c';-- 1
+SELECT 'abc' regexp '.d';-- 0
+SELECT 'abc' regexp '.cd';-- 0
+
+-- [...] 匹配任意单个括号内的字符 
+select 'abc' REGEXP '[a]'; -- 1
+select 'abc' REGEXP '[ab]'; -- 1
+select 'abc' REGEXP '[ab]'; -- 1
+select 'abc' REGEXP '[cav]'; -- 1
+
+select INSTR('konglingchao','hao');-- 10
+```
+
+![image-20220215180031857](C:\Users\ASUS\AppData\Roaming\Typora\typora-user-images\image-20220215180031857.png)
+
+
+
+mysql 索引
+===
+
+索引的分类
+
+索引是存储引擎用来快速查看记录的一种数据结构,按照实现的方式来分,可以分为 hash索引 和 B+树
+
+按照功能划分
+
+![image-20211223225900687](C:\Users\ASUS\AppData\Roaming\Typora\typora-user-images\image-20211223225900687.png)
+
+1 单列索引 - 普通索引
+---
+
+1. 单列索引
+
+   一个索引只包含一个列 但一个表可以有多个单列索引;
+
+2. 普通索引 MYSQL中基本索引类型,没有什么限制 允许在定义的索引的列中插入重复值和空值,纯粹为了查询数据更快一些
+
+```sql
+## 创建表的时候直接指定索引
+create table if not exists student(
+    s_id int primary key,
+    s_name varchar(50),
+    s_gengder varchar(20),
+    s_age int,
+    s_birth date,
+    s_serial_number varchar(20),
+    s_score double,
+    index index_name (s_name) ## 指定索引
+);
+
+## 使用alter修改表结构 添加索引
+alter table student add index index_age(s_age);
+
+## 创建索引
+create index index_score on student(s_score);
+
+## 显示索引
+select * from mysql.innodb_index_stats t where t.database_name = 'konglc_test' and t.table_name = 'student';
+
+
+## 删除索引
+alter table student drop index index_score;
+
+## 显示索引
+show index from student;
+```
+
+2 单列索引 - 唯一索引
+---
+
+唯一索引和前面的普通索引一样 不同点是 : 索引列的值必须唯一 但允许有空值 如果是组合索引 则列值的组合必须唯一
+
+它有以下几种创建方式
+
+```sql
+ ## 唯一索引
+ ## 1 在创建表的时候就创建索引
+drop table if exists student;
+create table if not exists student(
+    s_id int primary key,
+    s_name varchar(50),
+    s_gengder varchar(20),
+    s_age int,
+    s_birth date,
+    s_serial_number varchar(20),
+    s_score double,
+    unique index index_id (s_id) ## 指定索引
+);
+
+## 2 直接创建
+alter table student drop index  index_id;
+create unique index index_id on student(s_id);
+
+## 3 修改表结构 添加索引
+alter table student drop index index_id;
+alter table student add unique index_id(s_id);
+
+alter table student add unique  index_name(s_name);
+
+## 显示索引
+show index from student;
+```
+
+![image-20211223233650645](C:\Users\ASUS\AppData\Roaming\Typora\typora-user-images\image-20211223233650645.png)
+
+3 单列索引 - 主键索引
+---
+
+每张表一般都会有自己的主键 当我们在创建表的时 mysql会自动的在主键上建立一个索引 这就是主键索引 主键是唯一的并且不能为null,所以它是一种唯一的索引
+
+4 组合索引 
+---
+
+​	组合索引也叫复合索引 是指我们在创建索引的时候使用多个字段
+
+​	复合索引的使用符合最左原则
+
+```sql
+## 修改列名
+alter table student change column s_gengder  s_gender varchar(20);
+
+## 创建复合索引
+create index index_comp on student(s_id,s_name,s_gender);
+
+## 显示IO状态 (每隔10s显示一次)
+iostat -c 10
+```
+
+mysql存储过程
+===
+
+什么是存储过程
+---
+
+​	从mysql5.0开始支持存储过程
+
+​	简单的说,存储过程就是一组sql语句集 功能强大,可以实现一些比较复杂的逻辑功能,类似于java语言中的方法
+
+​	存储过程就是数据库SQL语言层面的代码封装与重用
+
+存储过程的特性
+---
+
+​	有输入输出参数,可以声明变量 有 if/else case while等语句,通过编写存储过程,可以实现复杂的逻辑功能
+
+​	函数的普遍特性: 模块化 封装 代码复用
+
+​	速度快,只有首次执行 需要经过编译和优化,后续被调用可以直接执行,省去以上步骤
+
+```sql
+delimiter 自定义的结束符号
+create procedure procedure_name([in out inout]param_name,param_type...)
+begin
+	sql_statement;
+end 自定义的结束符号
+delimiter;
+```
+
+```sql
+delimiter $$
+create procedure p_asp_first()
+begin
+	select acct_name  from t_acct;
+end $$ 
+delimiter
+-- 调用存储过程
+call p_asp_first();
+```
+
+mysql操作 变量定义
+---
+
+局部变量
+
+用户自定义 在begin/end语句块中有用
+
+```sql
+语法 声明变量 declare var_name type [default var_value]
+declare nickName varchar(32) default 'konglc';
+```
+
+```sql
+delimiter ;;
+create procedure p_asp_proc2()
+begin
+	## 声明局部变量
+	declare v_name varchar(20) default 'chaochao';
+	## 设置局部变量的值
+	set v_name = 'chengdu';
+	## 输出局部变量
+	select v_name;
+end ;;
+delimiter
+
+call p_asp_proc2();
+```
+
+mysql操作变量定义
+---
+
+```sql
+用户自定义
+语法:
+	@var_name
+	不需要提前声明 使用即声明
+	
+	
+```
+
+
+
+mysql事务
+===
+
+事务基本介绍
+---
+
+事务可以用来维护数据库的完整性,保证成批的`SQL`要么全部执行,要么全部不执行
+
+事务用来管理 `DDL` `DML` `DCL`操作 比如 `update delete insert`语句 默认是自动提交的
+
+```sql
+ ## 修改root用户密码
+ alter user 'root'@localhost identified with mysql_native_password by 'klcysu2021';
+```
+
+mysql事务操作主要有以下三种
+
+1 . 开启事务 : start transaction
+
+​	任何一条`DML`语句(insert update delete) 执行 标志事务的开始
+
+​	命令 begin 或 start transaction
+
+2 提交事务 commit transaction
+
+​	成功的结束将所有的DML语句操作历史记录和底层硬盘数据来一次同步
+
+​	命令 : commit
+
+3 回滚事务 rollback transaction
+
+​	失败的结束 将所有的DML语句操作历史记录全部清空
+
+​	命令 : rollback
+
+```sql
+## 以下设置仅对当前客户端有效
+## 查看自动提交
+select @@autocommit;
+show variables like '%autocommit%';
+set autocommit=0;## 禁止自动提交事务
+set autocommit=1;## 开启自动提交
+
+## 设置永久手动提交事务
+## 配置文件  /etc/mysql/mysql.conf.d/mysqld.cnf
+autocommit=0
+修改完成之后 重启mysql服务
+sudo service mysql restart
+```
+
+事务的特性
+---
+
+![image-20211226001245849](C:\Users\ASUS\AppData\Roaming\Typora\typora-user-images\image-20211226001245849.png)
+
+事务的隔离性
+---
+
+如果事务正在操作的数据别另外一个事务修改或删除.最后的执行结果可能无法达到预期,如果没有隔离性还会导致其它问题
+
+![image-20211226002209471](C:\Users\ASUS\AppData\Roaming\Typora\typora-user-images\image-20211226002209471.png)
+
+​		
+
+​	
+
+### 事务的隔离级别
+
+​	**读未提交(read uncommited)**
+
+​	一个事务可以读取另一个事务未提交的数据,最低级别,任何情况都无法保证,会造成脏读
+
+​	**读已提交(read commited)**
+
+​	一个事务要等另外一个事务提交后才能读取数据 可避免脏读的发生 会造成不可重复读
+
+​	**可重复读(repeatable read)**
+
+​	在开始读取数据时(事务开启),不再允许修改操作,可避免脏读,不可重复读的发生 但是会造成幻读
+
+​	**串行(serializable)**
+
+​	是最高的事务级别,在该级别下,事务串行化顺序执行,可避免脏读 不可重复读与幻读,但是这种事务隔离级别效率低下比较消耗数据库性能,一般不使用
+
+**mysql默认的隔离级别是可重复读(repeatable read)**
+
+|            事务的隔离级别            | 脏读 | 不可重复读 | 幻读 |
+| :----------------------------------: | ---- | :--------: | :--: |
+|      读未提交(read uncommitted)      | 是   |     是     |  是  |
+| 读已提交(read committed)(Oracle默认) | 否   |     是     |  是  |
+|      可重复读(repeatable read)       | 否   |     否     |  是  |
+|          串行(serializable)          | 否   |     否     |  否  |
+
+查看隔离级别
+
+```sql
+show variables like '%isola%';
+```
+
+![image-20211226003819809](C:\Users\ASUS\AppData\Roaming\Typora\typora-user-images\image-20211226003819809.png)
+
+```sql
+## 设置事务的隔离级别(仅仅针对当前会话) 这种隔离级别会引起脏读 A事务会读取到B事务未提交的数据
+set session transaction isolation level read uncommitted;
+## 会造成不可重复读 事务提交前后提交后读取到的数据不一致
+set session transaction isolation level read committed;
+## 
+set session transaction isolation level repeatable read;
+```
+
+mysql参数
+
+```tex
+sync_binlog
+该参数的有效值为0 、1、N：
+设置为0：默认值。事务提交后，将二进制日志从缓冲写入磁盘，但是不进行刷新操作（fsync()），此时只是写入了操作系统缓冲，若操作系统宕机则会丢失部分二进制日志。
+设置为1：事务提交后，将二进制文件写入磁盘并立即执行刷新操作，相当于是同步写入磁盘，不经过操作系统的缓存。
+设置为N：每写N次操作系统缓冲就执行一次刷新操作。
+将这个参数设为1以上的数值会提高数据库的性能，但同时会伴随数据丢失的风险。
+```
+
+mysql锁机制
+===
+
+概述
+---
+
+对数据的操作粒度分
+
+表锁 : 操作时 会锁定整个表
+
+行锁 : 操作时 会锁定当前操作行
+
+从数据的操作类型分
+
+读锁(共享锁) 针对同一份数据多个读操作可以同时进行而互不相影响
+
+写锁(排他锁) 当操作没有完成之前 会阻断其他写锁和读锁
+
+存储引擎
+---
+
+各种存储引擎对锁的支持情况
+
+| 存储引擎 | 表级锁 | 行级锁 |
+| -------- | ------ | ------ |
+| MyISAM   | 支持   | 不支持 |
+| InnoDB   | 支持   | 支持   |
+
+mysql锁的特性可大致归纳如下
+
+| 锁类型 | 特点                                                         |
+| ------ | ------------------------------------------------------------ |
+| 表级锁 | 偏向MyISAM存储引擎,开销小,加锁快 不会出现死锁 锁定粒度大 发生锁冲突的概率高 并发度低 |
+| 行级锁 | 偏向InnoDB存储引擎,开销大 加锁慢 会出现死锁,会出现死锁锁定粒度最小,发生锁冲突的概率最低 并发度也最高 |
+|        |                                                              |
+
+从上述特点可见,很难笼统的说哪种锁更好 只能就具体的应用特点来说哪种锁更合适 仅从锁的角度来说 表级锁更适合以查询为主 只有少量按索引条件更新数据的应用 如 web应用
+
+而行级锁更适用于大量按索引条件并发更新少量不同的数据 同时又有并查询的应用 如一些在线事务处理系统(OLTP)
+
+如何加表锁
+
+MyISAM在执行查询语句(select)前,会自动给涉及的表加读锁,在执行更新操作(update insert delete)前 会自动给涉及的表加写锁 这个过程并不需要用户干预 因此用户一般不需要直接使用lock table命令给MyIsam表显式加锁
+
+```sql
+## 加读锁
+lock table table_name read;
+## 加写锁
+lock table table_name write;
+
+## 加读锁
+lock table t_acct_myisam read;
+select * from t_acct_myisam;
+
+## 加了读锁之后 不能写
+## 报错如下 :
+## ERROR 1099 (HY000): Table 't_acct_myisam' was locked with a READ lock and can't be updated
+update t_acct_myisam set acct_balance=10000 where acct_id = 1;
+##对该表加了锁 不能查询其他没有加读锁的表
+##报错如下:
+## ERROR 1100 (HY000): Table 't_acct' was not locked with LOCK TABLES
+select * from t_acct;
+## 还可以对其他表
+lock table t_acct read;
+## 加了锁之后 可以对其他表进行读
+select * from t_acct;
+## 解锁
+unlock tables;
+
+
+## 写锁 是独占锁 其他会话不能再加锁了
+lock table t_acct_myisam write;
+## 对当前会话来说 当前表是没有被锁住的
+## 但对其他会话来说 这个表就是被锁住的
+show open tables where in_use>1;
+
+## 加了写锁之后  依然是可以读的 其他的会话是不可以查询的
+select * from t_acct_myisam;
+## 其它会话不能写
+insert into t_acct_myisam(acct_name,acct_balance) values('紫梦',10000); 
+unlock tables;
+```
+
+	InnoDB行锁
+---
+
+​	行锁的特点 偏向InnDB存储引擎 开销大 加锁慢 会出现死锁 锁定粒度最小 发生锁冲突的概率最低 并发度也最高
+
+​	InnoDB和MyISAM的最大不同有两点 : 一是支持事务 二是采用了行锁
+
+​	行锁模式
+
+​	InnoDB实现了两种类型的行锁 
+
+​	共享锁(S) 又称为读锁 共享锁就是多个事务对同一数据可以共享一把锁 都能访问到数据 但是只能读 不能修改
+
+​	排他锁 又称为写锁 排他锁就是不能与其他锁并存 如果一个事务获取了一个数据行的排他锁 其他事务就不能获取该行的其它锁 包括共享锁和排它锁  但是获取排他锁的事务是可以对数据行进行读取和修改
+
+​	
+
+对于 update delete insert 语句 InnoDB会自动的给涉及的数据加排它锁
+
+对于普通的select语句  InnoDB不会加任何锁
+
+mysql日志
+===
+
+在任何一种数据库中,都会有各种各样的日志 记录这数据工作的方方面面,以帮助数据库管理员追踪数据库曾今发生过的各种事件,mysql也不例外
+
+
+
+日志的分类
+---
+
+​	**错误日志**
+
+​	**二进制日志**
+
+​	**查询日志**
+
+​	**慢查询日志**
+
+错误日志
+---
+
+错误日志是mysql中最重要的日志之一 它记录了当mysqld启动和停止时 以及服务器在运行过程中发生任何严重错误时的相关信息 当数据库出现任何故障 无法使用时 可以首先查看此日志
+
+查看错误日志位置的指令
+
+```sql
+mysql> show variables like 'log_err%';
++----------------------------+----------------------------------------+
+| Variable_name              | Value                                  |
++----------------------------+----------------------------------------+
+| log_error                  | /var/log/mysql/error.log               |
+| log_error_services         | log_filter_internal; log_sink_internal |
+| log_error_suppression_list |                                        |
+| log_error_verbosity        | 2                                      |
++----------------------------+----------------------------------------+
+```
+
+二进制日志
+---
+
+二进制日志 binlog记录了所有DDL(数据库定义语言)语句 和DML(数据库操纵语言)语句 但是不包括数据查询语句此日志对于灾难时数据恢复起着极其重要的作用,mysql的主从复制就是通过该binlog实现的
+
+```shell
+## 二进制日志 日志的前缀 master-bin
+log_bin                 = /var/log/mysql/master-bin.log
+## 二进制日志的格式 
+binlog_format=row
+
+chaochao@chaochao:/var/log/mysql$ ls -lrt
+总用量 904
+-rw-r----- 1 mysql adm   755207 11月 26 08:53 error.log.5.gz
+-rw-r----- 1 mysql mysql    179 12月 22 22:46 mysql-bin.000001
+-rw-r----- 1 mysql mysql    179 12月 22 22:48 mysql-bin.000002
+-rw-r----- 1 mysql mysql    179 12月 22 22:48 mysql-bin.000003
+-rw-r----- 1 mysql mysql    179 12月 22 23:44 mysql-bin.000004
+-rw-r----- 1 mysql mysql    179 12月 22 23:46 mysql-bin.000005
+-rw-r----- 1 mysql mysql    192 12月 22 23:46 mysql-bin.index
+```
+
+日志的格式
+
+​	statement : 该日志文件格式在日志中记录的都是sql语句(statement)每一条对数据进行修改的sql都会记录在日志文件中,通过mysql提供的mysqlbinlog工具 可以清晰的查看到每条语句的文本.主从复制的时候,从库会将日志解析为原文本,并在从库重新执行一次
+
+​	row : 该日志格式在日志文件中记录的是每一行的数据变更,而不是记录sql语句 比如执行sql语句 update t_acct set acct_balance=1000  如果是statement日志格式  在日志文件中会记录一行sql文件 如果是row 由于是对全表进行更新,
+
+也就是每一行数据都会发生变更 row格式的日志文件中会记录每一行数据的变更
+
+​	mixed : 混合了statement和row两种格式
+
+```sql
+## 查看mysql是否开启了bin日志
+mysql> show variables like 'log_bin';
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| log_bin       | ON    |
++---------------+-------+
+mysql> -- 查看日志的格式
+mysql> show variables like 'binlog_format';
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| binlog_format | ROW   |
++---------------+-------+
+1 row in set (0.00 sec)
+
+
+-- 查看最新的日志
+show master status;
+
+-- 查询指定的binlog日志
+show binlog events in 'master-bin.000010';
+```
+
+查询日志
+---
+
+查询日志记录了客户端所有的查询操作语句 而二进制日志不包含查询数据的sql语句
+
+默认情况下 查询日志是未开启的 如果需要开启查询日志 需要配置如下
+
+```sql
+## 查看查询日志
+mysql> show variables like '%general%';
++------------------+---------------------------+
+| Variable_name    | Value                     |
++------------------+---------------------------+
+| general_log      | OFF                       |
+| general_log_file | /var/lib/mysql/MrChao.log |
++------------------+---------------------------+
+## 查询日志是否开启
+general_log 
+
+## 查询日志的文件名
+general_log_file
+
+general_log_file        = /var/log/mysql/query.log
+## 开启查询日志
+general_log             = 1 
+
+
+mysql> show variables like '%general%';
++------------------+--------------------------+
+| Variable_name    | Value                    |
++------------------+--------------------------+
+| general_log      | ON                       |
+| general_log_file | /var/log/mysql/query.log |
++------------------+--------------------------+
+
+
+## 查看查询日志
+sudo tail -100f query.log 
+/usr/sbin/mysqld, Version: 8.0.27-0ubuntu0.20.04.1 ((Ubuntu)). started with:
+Tcp port: 12666  Unix socket: /var/run/mysqld/mysqld.sock
+Time                 Id Command    Argument
+2021-12-26T09:31:32.930721Z         8 Connect   lc_konglc@chaochao on konglc_test using SSL/TLS
+2021-12-26T09:31:32.932641Z         8 Query     show databases
+2021-12-26T09:31:32.936942Z         8 Query     show tables
+2021-12-26T09:31:32.940322Z         8 Field List        article 
+2021-12-26T09:31:32.947119Z         8 Field List        book 
+2021-12-26T09:31:32.950148Z         8 Field List        class 
+2021-12-26T09:31:32.952839Z         8 Field List        staffs 
+2021-12-26T09:31:32.954974Z         8 Field List        student 
+2021-12-26T09:31:32.956430Z         8 Field List        t_acct 
+2021-12-26T09:31:32.958590Z         8 Field List        t_acct_myisam 
+2021-12-26T09:31:32.959953Z         8 Field List        t_dept 
+2021-12-26T09:31:32.962170Z         8 Field List        t_employee 
+2021-12-26T09:31:32.962865Z         8 Field List        t_user 
+2021-12-26T09:31:32.963922Z         8 Field List        tab_a 
+2021-12-26T09:31:32.966283Z         8 Field List        tbl_dept 
+2021-12-26T09:31:32.969355Z         8 Field List        tbl_dept_bak 
+2021-12-26T09:31:32.970397Z         8 Field List        tbl_emp 
+2021-12-26T09:31:32.970874Z         8 Field List        tmp_tab_float 
+2021-12-26T09:31:32.971837Z         8 Field List        tmp_tint 
+2021-12-26T09:31:32.972839Z         8 Query     select @@version_comment limit 1
+2021-12-26T09:31:34.770546Z         8 Query     show variables like '%general%'
+2021-12-26T09:32:09.714112Z         9 Connect   lc_konglc@192.168.10.133 on  using TCP/IP
+2021-12-26T09:32:09.714772Z         9 Query     SET NAMES utf8mb4
+2021-12-26T09:32:09.715523Z         9 Query     SELECT UNIX_TIMESTAMP()
+2021-12-26T09:32:09.716147Z         9 Query     SELECT @@GLOBAL.SERVER_ID
+2021-12-26T09:32:09.716678Z         9 Query     SET @master_heartbeat_period = 30000001024, @source_heartbeat_period = 30000001024
+2021-12-26T09:32:09.717109Z         9 Query     SET @master_binlog_checksum = @@global.binlog_checksum, @source_binlog_checksum = @@global.binlog_checksum
+2021-12-26T09:32:09.717580Z         9 Query     SELECT @source_binlog_checksum
+2021-12-26T09:32:09.718007Z         9 Query     SELECT @@GLOBAL.GTID_MODE
+2021-12-26T09:32:09.718375Z         9 Query     SELECT @@GLOBAL.SERVER_UUID
+2021-12-26T09:32:09.718784Z         9 Query     SET @slave_uuid = 'f8c09b6f-6342-11ec-9e68-000c2943eee1', @replica_uuid = 'f8c09b6f-6342-11ec-9e68-000c2943eee1'
+2021-12-26T09:32:09.719417Z         9 Binlog Dump       Log: 'master-bin.000023'  Pos: 156
+2021-12-26T09:32:16.772235Z        10 Connect   lc_konglc@192.168.10.1 on konglc_test using TCP/IP
+2021-12-26T09:32:16.773389Z        10 Query     SET NAMES utf8
+2021-12-26T09:32:16.774898Z        10 Query     use `konglc_test`
+2021-12-26T09:32:16.778704Z        10 Query     show tables
+2021-12-26T09:32:27.442203Z        10 Query     select * from book LIMIT 0, 1000
+```
+
+慢查询日志
+---
+
+                ```sql
+                ## 开启慢查询日志
+                slow_query_log          = 1
+                ## 慢查询日志位置
+                slow_query_log_file     = /var/log/mysql/mysql-slow.log
+                ## 慢查询时间 超过2s就算慢查询
+                long_query_time = 2
+
+
+​                
+​                ## 查看慢查询日志的开启状态
+​                show variables like 'slow_query_log';
+​                ## 开启慢查询日志
+​                set slow_query_log=1;
+​                ## 慢查询日志文件
+​                show variables like 'slow_query_log_file';
+​                mysql> show variables like 'slow_%';
+​                +---------------------+-------------------------------+
+​                | Variable_name       | Value                         |
+​                +---------------------+-------------------------------+
+​                | slow_launch_time    | 2                             |
+​                | slow_query_log      | ON                            |
+​                | slow_query_log_file | /var/log/mysql/mysql-slow.log |
+​                +---------------------+-------------------------------+
+​                
+​                select sleep(2);
+​                ```
+
+![image-20211226213419333](C:\Users\ASUS\AppData\Roaming\Typora\typora-user-images\image-20211226213419333.png)
+
+mysql的优化
+===
+
+在应用的开发过程中,由于初期数据量小,开发人员写sql语句时,更注重功能上的实现,但是当应用系统正式上线后,随着生产数据量的急剧增长,很多SQL语句开始逐渐显露出性能问题,对生产的影响也越来越大.此时这些有问题的sql语句就会整个系统性能的瓶颈,因此我们必须要对它们进行优化
+
+mysql优化的方式有很多,大致我们可以从以下几点来进行优化:
+
+​	从设计上优化
+
+​	从查询上优化
+
+​	从索引上优化
+
+​	从存储上优化
+
+	查看sql的执行频率
+---
+
+​		MySQL客户端连接成功之后,通过`show session|global status`命令可以查看服务器状态信息,通过查看状态信息可以查看对当前数据库的主要操作类型
+
+```sql
+## 查看当前会话的统计结果
+show session status like 'Com_______';
+
+## 查看数据库自上次启动至今的统计结果
+show global status like 'Com_______';
+
+## 查看针对InnoDB引擎的统计结果
+show status like 'Innodb_rows_%';
+```
+
+​		![image-20211226214733779](C:\Users\ASUS\AppData\Roaming\Typora\typora-user-images\image-20211226214733779.png)
+
+​		![image-20211226214808376](C:\Users\ASUS\AppData\Roaming\Typora\typora-user-images\image-20211226214808376.png)
+
+	定位低效率执行的sql
+---
+
+​		慢查询日志
+
+```sql
+## 慢查询日志的时间
+mysql> show variables like 'long_query_time';
++-----------------+----------+
+| Variable_name   | Value    |
++-----------------+----------+
+| long_query_time | 2.000000 |
++-----------------+----------+
+
+## 设置慢查询日志的时间
+set long_query_time = 10;
+
+## 定位低效率执行sql
+show processlist;
+```
+
+![image-20211226220221832](C:\Users\ASUS\AppData\Roaming\Typora\typora-user-images\image-20211226220221832.png)
+
+```sql
+select sleep(1);
+```
+
+![image-20211226222044244](C:\Users\ASUS\AppData\Roaming\Typora\typora-user-images\image-20211226222044244.png)
+
+```tex
+info 列 : 显示当前sql
+```
+
+explain查询sql的执行计划
+---
+
