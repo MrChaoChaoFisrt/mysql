@@ -4842,7 +4842,7 @@ LOCK_DATA             | supremum pseudo-record
 
   如果允许这种情况发生,那么可能产生脏读问题
 
-- ​
+- 
 
 #### 隐式锁
 
@@ -5567,29 +5567,7 @@ show binlog events in 'master-bin.041217';
  mysqlbinlog  --start-position=3019 --stop-position=3675 -d konglc_test master-bin.041217|mysql -ulc_konglc -p konglc_test  
 ```
 
-
-
-```shell
-#!/bin/bash
-
-###
-
-
-```
-
-
-
-```sql
-select  * from  
-```
-
-
-
-```c++
-
-```
-
-
+![image-20220530004223803](G:\2022\mysql\note\image-20220530004223803.png)
 
 
 
