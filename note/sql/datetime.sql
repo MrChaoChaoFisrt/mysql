@@ -12,6 +12,7 @@ select now() from dual;
 select date_format(now(),'%Y%m%d%H%i%s') from dual;
 select sysdate() from dual;
 select current_timestamp() from dual;
+-- mysql获取本地时间
 select localtime() from dual;
 
 /*

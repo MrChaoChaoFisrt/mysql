@@ -5567,7 +5567,7 @@ show binlog events in 'master-bin.041217';
  mysqlbinlog  --start-position=3019 --stop-position=3675 -d konglc_test master-bin.041217|mysql -ulc_konglc -p konglc_test  
 ```
 
-![image-20220530004223803](G:\2022\mysql\note\image-20220530004223803.png)
+
 
 
 
